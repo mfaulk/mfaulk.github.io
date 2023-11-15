@@ -62,3 +62,4 @@ There are a few different tools for computing Gröbner bases.
 - Ideals, Varieties, and Algorithms. Cox, Little, O'Shea
 - Grobner Bases. Becker, Weispfenning
 - [Algebraic Attacks on ZK-Friendly Hash Functions](https://www.zellic.io/blog/algebraic-attacks-on-zk-hash-functions/)
+- [Solving Polynomial Systems over Finite Fields: Algorithms, Implementation and Applications](https://theses.hal.science/tel-01110887/document), Chenqi Mou
