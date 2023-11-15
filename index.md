@@ -1,5 +1,3 @@
-Here you can say lots of fun things about your site.
+Matt's Blog
 
-Maybe say a some things about yourself.
-
-Or maybe what you plan to blog about.
+Thoughts from an Engineer, Entrepreneur, Applied Cryptographer
