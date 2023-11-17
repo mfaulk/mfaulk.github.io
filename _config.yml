@@ -22,6 +22,8 @@ theme: "minima"
 
 rss: rss
 
+markdown: kramdown
+
 kramdown:
   syntax_highlighter_opts:
     disable: true
@@ -37,6 +39,6 @@ titles_from_headings:
 defaults:
   - scope:
       path: ""
-      type: post
+      type: posts
     values:
       tags: Other
