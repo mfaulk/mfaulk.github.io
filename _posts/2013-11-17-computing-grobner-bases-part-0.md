@@ -4,9 +4,10 @@ Today, I want to try out [Groebner.jl](https://github.com/sumiya11/Groebner.jl).
 packages for computing Gröbner bases, and I'd like to use it to solve some systems of polynomial equations over finite 
 fields.  
 
-*Why?* I'm currently working with "ZK-Friendly" hash functions like Poseidon and Rescue. Unlike most hash 
-functions that are designed to be efficiently computable on modern CPUs, these hash functions are designed to have concise algebraic 
-descriptions so that they can be efficiently computed in zero-knowledge proofs. As a result, the security of these 
+*Why?* I'm currently working with "ZK-Friendly" hash functions like [Poseidon](https://www.poseidon-hash.info/) and 
+[Rescue](https://www.esat.kuleuven.be/cosic/sites/rescue). Unlike most hash functions that are designed to be 
+efficiently computable on modern CPUs, these hash functions are designed to have concise algebraic descriptions so 
+that they can be efficiently computed in zero-knowledge proofs. As a result, the security of these 
 hash functions hinges on the difficulty of solving particular systems of polynomial equations over large finite 
 fields -- so-called "Gröbner basis attacks". The assumption is that this is hard, and in fact the worst-case 
 complexity for computing Gröbner bases is doubly-exponential in the number of variables. Of course, worst-case 
@@ -68,8 +69,8 @@ y^2 + yz + z^2 \\
 x + y + z
 \end{eqnarray}$$
 
-Notice that we can start at the top and solve each equation for a single variable. The roots of the first equation 
-are 9, 3, and 1. Substituting these into the second equation gives us: 
+Notice that we can start at the top and solve each equation for a single variable. Working in $F_{13}$, the roots of 
+the first equation are 9, 3, and 1. Substituting these into the second equation gives us:
 
 - $z=9$: $y^2 + 9y + 3 = 0$, with roots 3 and 1,
 - $z = 3$: $y^2 + 3y + 9 = 0$, with roots 9 and 1,
