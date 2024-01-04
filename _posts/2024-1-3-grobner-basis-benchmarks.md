@@ -32,5 +32,5 @@ I = sage.rings.ideal.Katsura(P, 3); I
 I.groebner_basis()
 ```
 
-Again, this seems to be used as a benchmark because it is an existing application of polynomial system solving, and not because the problem is particularly significant to computational algebra. Katsura-3 is used as a "toy example" in the [FGB Tutorial](https://www-polsys.lip6.fr/~jcf/FGb/Maple/tutorial-fgb.pdf).
+Again, this seems to be used as a benchmark because it is an existing application of polynomial system solving, and not because the problem is particularly significant to computational algebra. Katsura-3 is used as a "toy example" in the [FGB Tutorial](https://www-polsys.lip6.fr/~jcf/FGb/Maple/tutorial-fgb.pdf). So far, [this](https://homepages.math.uic.edu/~jan/Demo/katsura5.html) is the best reference I've found. 
 
