@@ -1,4 +1,4 @@
-# Setup
+# Testing Locally
 
 Install prerequisites, rbenv, and ruby-build:
 
@@ -6,10 +6,10 @@ Install prerequisites, rbenv, and ruby-build:
     sudo apt install -y git ruby-full build-essential zlib1g-dev
     sudo apt install rbenv ruby-build
 
-Configure your shell to load rbenv:
+Add the following to your .bashrc (and then source ~/.bashrc):
 
-    echo 'eval "$(~/.rbenv/bin/rbenv init - bash)"' >> ~/.bashrc
-    source ~/.bashrc
+    export PATH="$HOME/.rbenv/bin:$PATH"
+    eval "$(rbenv init -)"
 
 Install a version of Ruby via rbenv:
 
@@ -24,11 +24,9 @@ Install a version of Ruby via rbenv:
 
 And set the version to use:
 
-
     rbenv global 3.1.2   # set the default Ruby version for this machine
     # or:
     rbenv local 3.1.2    # set the Ruby version for this directory
-
 
 Sanity check:
 
@@ -45,6 +43,7 @@ With rbenv set up, install Bundler:
 
     gem install bundler
 
+And serve locally:
 
     cd yourblog
     bundle install
