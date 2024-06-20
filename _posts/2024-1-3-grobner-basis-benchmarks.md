@@ -7,9 +7,9 @@ The cyclic n-roots problem is frequently used to benchmark the performance of al
 
 $$\begin{eqnarray}
 x_0 + ... + x_{n-1} = 0 \\
-x_0 x_1 + x_1 x_2 + ... + x_{n-2} x_{n-1} + x_{n-1} x_0 \\
+x_0 x_1 + x_1 x_2 + ... + x_{n-2} x_{n-1} + x_{n-1} x_0 = 0 \\
 i = 3,4,..., n-1 : \sum_{j=0}^{n-1} \prod_{k=j}^{j+i-1} x_{k \mod n} = 0 \\
-x_0  x_1  ...  x_{n-1}  1 = 0
+x_0  x_1  ...  x_{n-1} = 0
 \end{eqnarray}$$
 
 Each polynomial in the system is cyclic, i.e., they are invariant under cyclic permutation of the arguments. This problem appears to have been introduced by Göran Björck. If you're curious, [Cyclic p-roots of prime length p and related
@@ -32,5 +32,5 @@ I = sage.rings.ideal.Katsura(P, 3); I
 I.groebner_basis()
 ```
 
-Again, this seems to be used as a benchmark because it is an existing application of polynomial system solving, and not because the problem is particularly significant to computational algebra. Katsura-3 is used as a "toy example" in the [FGB Tutorial](https://www-polsys.lip6.fr/~jcf/FGb/Maple/tutorial-fgb.pdf). So far, [this](https://homepages.math.uic.edu/~jan/Demo/katsura5.html) is the best reference I've found. 
+Again, this seems to be used as a benchmark because it is an existing application of polynomial system solving, and not because the problem is particularly significant to computational algebra. Katsura-3 is used as a toy example in the [FGB Tutorial](https://www-polsys.lip6.fr/~jcf/FGb/Maple/tutorial-fgb.pdf). So far, [this](https://homepages.math.uic.edu/~jan/Demo/katsura5.html) is the best reference I've found. 
 
