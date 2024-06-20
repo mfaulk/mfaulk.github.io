@@ -1,6 +1,6 @@
 ## Reading Ilya's list of AI papers
 
-* [1993 - Keeping Neural Networks Simple](#keeping-neural-networks-simple)
+* [1993 - Keeping Neural Networks Simple By Minimizing the Description Length of the Weights](#keeping-neural-networks-simple-by-minimizing-the-description-length-of-the-weights)
 * [2004 - A Tutorial Introduction to the Minimum Description Length Principle](#a-tutorial-introduction-to-the-minimum-description-length-principle)
 * [2008 - Machine Super Intelligence](#machine-super-intelligence)
 * [2011 - The First Law of Complexodynamics](#the-first-law-of-complexodynamics)
@@ -27,57 +27,74 @@
 * [2020 - Scaling Laws for Neural Language Models](#scaling-laws-for-neural-language-models)
 * [CS231n Convolutional Neural Networks for Visual Recognition](#cs231n-convolutional-neural-networks-for-visual-recognition)
 
-## Attention is All You Need
+# Keeping Neural Networks Simple by Minimizing the Description Length of the Weights
+*Hinton, Geoffrey E., and Drew Van Camp, 1993* [(PDF)](https://www.cs.toronto.edu/~fritz/absps/colt93.pdf)
+
+The [Minimum Description Length Principle](https://en.wikipedia.org/wiki/Minimum_description_length) asserts that the best model of some data is the one that minimizes the sum of the length of the description of the model and the length of the data encoded using that model.
+
+* Applies the MDL principle to neural networks to control model complexity and prevent overfitting.
+* Uses weight sharing to minimize the description length of the weights: The same weight is applied to multiple 
+  connections in the network, reducing the number of free parameters, and thus the model complexity.
+
+# A Tutorial Introduction to the Minimum Description Length Principle
+*Peter Grünwald, 2004* [(PDF)](https://arxiv.org/pdf/math/0406077)
+
+A clearly-written introduction to the [Minimum Description Length Principle](https://en.wikipedia.
+org/wiki/Minimum_description_length). 
+
+* Learning as data compression: Every regularity in data may be used to compress that data, and learning can be 
+  equated with finding those regularities.
+* MDL as model selection: The best model is the one that minimizes the sum of the length of the description of the 
+  model and the length of the data encoded using that model.
+
+
+# Attention is All You Need
 https://nlp.seas.harvard.edu/annotated-transformer/
 
-## The First Law of Complexodynamics
+# The First Law of Complexodynamics
 
-## The Unreasonable Effectiveness of Recurrent Neural Networks
+# The Unreasonable Effectiveness of Recurrent Neural Networks
 
-## Understanding LSTM Networks
+# Understanding LSTM Networks
 
-## Recurrent Neural Network Regularization
+# Recurrent Neural Network Regularization
 
-## Keeping Neural Networks Simple
+# Pointer Networks
 
-## Pointer Networks
+# ImageNet Classification with Deep Convolutional Neural Networks
 
-## ImageNet Classification with Deep Convolutional Neural Networks
+# Order Matters: Sequence to sequence for sets
 
-## Order Matters: Sequence to sequence for sets
+# GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism
 
-## GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism
+# Deep Residual Learning for Image Recognition
 
-## Deep Residual Learning for Image Recognition
+# Multi-Scale Context Aggregation by Dilated Convolutions
 
-## Multi-Scale Context Aggregation by Dilated Convolutions
+# Neural Message Passing for Quantum Chemistry
 
-## Neural Message Passing for Quantum Chemistry
+# Attention is All You Need
 
-## Attention is All You Need
+# Neural Machine Translation by Jointly Learning to Align and Translate
 
-## Neural Machine Translation by Jointly Learning to Align and Translate
+# Identity Mappings in Deep Residual Networks
 
-## Identity Mappings in Deep Residual Networks
+# A Simple Neural Network Module for Relational Reasoning
 
-## A Simple Neural Network Module for Relational Reasoning
+# Variational Lossy Autoencoder
 
-## Variational Lossy Autoencoder
+# Relational Recurrent Neural Networks
 
-## Relational Recurrent Neural Networks
+# Quantifying the Rise and Fall of Complexity in Closed Systems
 
-## Quantifying the Rise and Fall of Complexity in Closed Systems
+# Neural Turing Machines
 
-## Neural Turing Machines
+# Deep Speech 2: End-to-End Speech Recognition in English and Mandarin
 
-## Deep Speech 2: End-to-End Speech Recognition in English and Mandarin
+# Scaling Laws for Neural Language Models
 
-## Scaling Laws for Neural Language Models
+# Machine Super Intelligence
 
-## A Tutorial Introduction to the Minimum Description Length Principle
+# Kolmogorov Complexity and Algorithmic Randomness
 
-## Machine Super Intelligence
-
-## Kolmogorov Complexity and Algorithmic Randomness
-
-## CS231n Convolutional Neural Networks for Visual Recognition
+# CS231n Convolutional Neural Networks for Visual Recognition
