@@ -159,12 +159,11 @@ tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO seg
 
 __Takeaways__
 
-* __Residual Networks (ResNets) allow for the training of much deeper networks.__ 
-* Addresses __"Degradation Problem"__, where additional layers increased both testing __and__ training loss, i.e., 
-  not overfitting. Maybe the optimizer can't find the identity function?
-* Core idea: __shortcut connections (skip connections) that bypass one or more layers__, so that layers represet the 
-  residual function F(x) = H(x) - x.  
-* State-of-the-Art Performance on several benchmarks.
+* __Degradation Problem__: Additional layers can increase both testing and training error, i.e., not just overfitting. 
+  This is counterintuitive because deeper networks could just represent shallower networks by setting some layers to the identity function.
+* __Introduces Residual Networks (ResNets)__. The core idea is __skip connections__ that bypass one or more layers so 
+  that layers represent the residual function F(x) = H(x) - x.
+
 
 # Neural Machine Translation by Jointly Learning to Align and Translate
 *Bahdanau, Dzmitry, Kyunghyun Cho, and Yoshua Bengio, 2015* [(PDF)](https://arxiv.org/pdf/1409.0473)
@@ -244,12 +243,43 @@ __Takeaways__
 * Models have around 100 million parameters.
 
 # Identity Mappings in Deep Residual Networks
+*Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. 2016* [(PDF)](https://arxiv.org/pdf/1603.05027)
 
-TODO
+*"Deep residual networks have emerged as a family of extremely deep architectures showing compelling accuracy and 
+nice convergence behaviors. In this paper, __we analyze the propagation formulations behind the residual building 
+blocks__, which suggest that the __forward and backward signals can be directly propagated from one block to any 
+other block, when using identity mappings as the skip connections and after-addition activation__. A series of 
+ablation experiments support the importance of these identity mappings. This motivates us to propose a new residual unit, which makes training easier and improves generalization. We report improved results using a 1001-layer ResNet on CIFAR-10 (4.62% error) and CIFAR-100, and a 200-layer ResNet on ImageNet."*
+
+__Takeaways__
+
+* The authors build on their previous paper, [Deep Residual Learning for Image Recognition](#deep-residual-learning-for-image-recognition), and propose a new residual unit by setting some parts of the 
+  original residual unit to identity mappings. The result is a "residual relation" between every pair of layers, 
+  which gives the forward and backward signals a nice, additive structure.
+* Demonstrates new residual units in a 1001-layer ResNet.
 
 # Multi-Scale Context Aggregation by Dilated Convolutions
+*Fisher Yu, Vladlen Koltun. 2015* [(PDF)](https://arxiv.org/pdf/1511.07122)
 
-TODO
+State-of-the-art models for semantic segmentation are based on adaptations of convolutional networks that had 
+originally been designed for image classification. However, dense prediction and image classification are 
+structurally different. In this work, __we develop a new convolutional network module that is specifically designed 
+for dense prediction__. The presented module uses __dilated convolutions__ to systematically aggregate multi-scale 
+contextual information without losing resolution. The architecture is based on the fact that __dilated convolutions 
+support exponential expansion of the receptive field without loss of resolution or coverage__. We show that the 
+presented context module increases the accuracy of state-of-the-art semantic segmentation systems. In addition, we examine the adaptation of image classification networks to dense prediction and show that simplifying the adapted network can increase accuracy.
+
+__Takeaways__
+
+* Semantic segmentation assigns a label to each pixel in the image. This is a different task from image 
+  classification, where the goal is to assign a single label to the entire image. However, many semantic 
+  segmentation models are based on architectures designed for image classification.
+* Critically evaluates techniques borrowed from image classification and finds that pooling and subsampling layers 
+  may not be a good fit for semantic segmentation.
+* Advocates for __dilated convolutions - a type of convolution with gaps between the kernel elements__. This expands 
+  the receptive field without increasing the number of parameters.
+
+![Zeebra](/assets/images/dilatedconvolution.png)
 
 # Order Matters: Sequence to sequence for sets
 
