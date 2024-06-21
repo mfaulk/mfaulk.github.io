@@ -1,4 +1,4 @@
-## Ilya's List of AI papers: Key Takeaways
+## Ilya's AI papers: Key Takeaways
 
 The [internet has been talking about](https://news.ycombinator.com/item?id=34641359) a list of AI papers that Ilya Sutskever, co-founder of OpenAI, recommended to John Carmack:
 
@@ -7,11 +7,12 @@ stack of all the stuff I need to know to actually be relevant in this space. And
 research papers and said, ‘If you really learn all of these, you’ll know 90% of what matters today.’ And I did. I plowed through all those things and it all started sorting out in my head."*
 
 The exact list seems to be lost to time, but something like it recently [resurfaced on Xwitter](https://x.
-com/keshavchan/status/1787861946173186062). Regardless of origin, the list includes some landmark papers in the development of large language models — i.e., the class of artificial neural networks responsible for things like ChatGPT. Together, they tell the story of how we learned to assemble basic neural units into increasingly sophisticated architectures, what those architectures are capable of learning, and the practical techniques that make training them possible.
+com/keshavchan/status/1787861946173186062). Regardless of origin, the list includes some landmark papers in the 
+development of large language models — i.e., the class of artificial neural networks responsible for things like ChatGPT. Together, they tell a story of how we learned to assemble basic neural units into increasingly sophisticated architectures, what those architectures are capable of learning, and the practical techniques that make training them possible.
 
 # "Ilya's List" of AI Papers
-I've collected the papers here, along with some key takeaways from each. I've put them in chronological order to 
-make it easier to see how they build on each other. Most of them are papers, but a few are books, blog posts, course 
+I've collected the papers here, along with some key takeaways from each. They are in chronological order to 
+make it easier to see how they build on each other. Most are papers, but a few are books, blog posts, course 
 notes, etc. In any case, it's a lot of reading! I've highlighted a few that I think are particularly worth a look.
 
 * [1993 - Keeping Neural Networks Simple By Minimizing the Description Length of the Weights](#keeping-neural-networks-simple-by-minimizing-the-description-length-of-the-weights)
@@ -44,6 +45,8 @@ notes, etc. In any case, it's a lot of reading! I've highlighted a few that I th
 # Keeping Neural Networks Simple by Minimizing the Description Length of the Weights
 *Hinton, Geoffrey E., and Drew Van Camp, 1993* [(PDF)](https://www.cs.toronto.edu/~fritz/absps/colt93.pdf)
 
+__Takeaways__
+
 The [Minimum Description Length Principle](https://en.wikipedia.org/wiki/Minimum_description_length) asserts that the best model of some data is the one that minimizes the sum of the length of the description of the model and the length of the data encoded using that model.
 
 * Applies the MDL principle to neural networks to control model complexity and prevent overfitting.
@@ -53,7 +56,10 @@ The [Minimum Description Length Principle](https://en.wikipedia.org/wiki/Minimum
 # A Tutorial Introduction to the Minimum Description Length Principle
 *Peter Grünwald, 2004* [(PDF)](https://arxiv.org/pdf/math/0406077)
 
-A clearly-written intro to the [Minimum Description Length Principle](https://en.wikipedia.org/wiki/Minimum_description_length). 
+__Takeaways__
+
+A clearly-written intro to the [Minimum Description Length Principle](https://en.wikipedia.
+org/wiki/Minimum_description_length) and its applications to model selection.
 
 * Learning as data compression: Every regularity in data may be used to compress that data, and learning can be 
   equated with finding those regularities.
@@ -66,8 +72,11 @@ A clearly-written intro to the [Minimum Description Length Principle](https://en
 TODO
 
 # The First Law of Complexodynamics
+*Scott Aaronson, 2011.* [(Blog Post)](https://scottaaronson.blog/?p=762)
 
-TODO
+__Takeaways__
+
+Theoretical computer scientist [Scott Aaronson](https://www.scottaaronson.com/) (complexity theory, quantum computing) tries to pin down what we mean by "complex systems", and conjectures about what it would mean to define complexity in a rigorous way. He pulls in concepts like entropy and (resource-bounded) Kolmogorov complexity. There are some interesting questions here, but feel free to skip this one if you are looking for practical takeaways.
 
 # ImageNet Classification with Deep Convolutional Neural Networks
 *Krizhevsky, Alex, Ilya Sutskever, and Geoffrey E. Hinton, 2012* [(PDF)](https://proceedings.neurips.cc/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf)
@@ -84,11 +93,12 @@ variant of this model in the ILSVRC-2012 competition and achieved a winning top-
 compared to 26.2% achieved by the second-best entry."*
 
 __Takeaways__
+
 * Introduced __AlexNet, a deep convolutional neural network__ that achieved unprecedented performance in image 
   classification. AlexNet won the ImageNet Large Scale Visual Recognition Challenge in 2012 by a substantial 
   margin, bringing deep learning to the forefront of computer vision research.
 * __Deep Architecture__ AlexNet's depth -- five convolutional and three fully connected layers -- allowed the network to learn hierarchical feature representations, capturing complex patterns in the data that were not possible with shallower architectures.
-* __Training with GPUs__ made it feasible to train deep networks on large datasets like ImageNet.
+* __Training with GPUs__ Used GPUs, parallel computation, and ReLU activation functions to speed up training.
 
 ## Neural Turing Machines
 *Graves, Alex, Greg Wayne, and Ivo Danihelka, 2014* [(PDF)](https://arxiv.org/pdf/1410.5401)
@@ -109,12 +119,52 @@ __Takeaways__
   actually do it.
 
 # Quantifying the Rise and Fall of Complexity in Closed Systems
+*Aaronson, Carroll, Ouelette, 2014* [(PDF)](https://arxiv.org/pdf/1405.6903)
 
-TODO
+*"__In contrast to entropy, which increases monotonically, the “complexity” or “interestingness” of closed systems 
+seems intuitively to increase at first and then decrease as equilibrium is approached__. For example, our universe 
+lacked complex structures at the Big Bang and will also lack them after black holes evaporate and particles are 
+dispersed. This paper makes an initial attempt to quantify this pattern. As a model system, we use a simple, 
+two-dimensional cellular automaton that simulates the mixing of two liquids (“coffee” and “cream”). __A plausible 
+complexity measure is then the Kolmogorov complexity of a coarse-grained approximation of the automaton’s state, 
+which we dub the “apparent complexity__.” We study this complexity  measure, and show analytically that it never becomes large when the liquid particles are noninteracting. By contrast, when the particles do interact, we give numerical evidence that the complexity reaches a maximum comparable to the “coffee cup’s” horizontal dimension. We raise the problem of proving this behavior analytically."*
+
+__Takeaways__
+
+This paper continues ideas from [The First Law of Complexodynamics](#the-first-law-of-complexodynamics). I think you 
+can safely skip it.
+
+* The entropy of an n-bit string is often identified with its Kolmogorov complexity, i.e., the length of the shortest 
+  program that generates the string. 
+* __Kolmogorov complexity is well-known to be uncomputable__ (equivalent to the halting problem), but can maybe be 
+  approximated? "While Kolmogorov complexity and sophistication are useful theoretical notions to model our ideas
+  of entropy and complexity, they cannot be directly applied in numerical simulations, because they
+  are both uncomputable."
 
 # Deep Residual Learning for Image Recognition
+*He, Kaiming, Xiangyu Zhang, Shaoqing Ren, and Jian Sun, 2015* [(PDF)](https://arxiv.org/pdf/1512.03385)
 
-TODO
+*"Deeper neural networks are more difficult to train. We present a residual learning framework to ease the training 
+of __networks that are substantially deeper than those used previously__. We explicitly __reformulate the layers as 
+learning residual functions__ with reference to the layer inputs, instead of learning unreferenced functions. We 
+provide comprehensive empirical evidence showing that these residual networks are easier to optimize, and can gain 
+accuracy from considerably increased depth. On the ImageNet dataset we evaluate residual nets with a depth of up to 
+152 layers---8x deeper than VGG nets but still having lower complexity. An ensemble of these residual nets achieves 
+3.57% error on the ImageNet test set. This result won the __1st place on the ILSVRC 2015 classification task__. We 
+also present analysis on CIFAR-10 with 100 and 1000 layers.
+The depth of representations is of central importance for many visual recognition tasks. Solely due to our extremely 
+deep representations, we obtain a 28% relative improvement on the COCO object detection dataset. Deep residual nets 
+are foundations of our submissions to ILSVRC & COCO 2015 competitions, where we also won the __1st places on the 
+tasks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation.__"*
+
+__Takeaways__
+
+* __Residual Networks (ResNets) allow for the training of much deeper networks.__ 
+* Addresses __"Degradation Problem"__, where additional layers increased both testing __and__ training loss, i.e., 
+  not overfitting. Maybe the optimizer can't find the identity function?
+* Core idea: __shortcut connections (skip connections) that bypass one or more layers__, so that layers represet the 
+  residual function F(x) = H(x) - x.  
+* State-of-the-Art Performance on several benchmarks.
 
 # Neural Machine Translation by Jointly Learning to Align and Translate
 *Bahdanau, Dzmitry, Kyunghyun Cho, and Yoshua Bengio, 2015* [(PDF)](https://arxiv.org/pdf/1409.0473)
@@ -128,12 +178,22 @@ fixed-length vector is a bottleneck in improving the performance of this basic e
 propose to extend this by allowing a model to automatically (soft-)search for parts of a source sentence that are relevant to predicting a target word__, without having to form these parts as a hard segment explicitly. With this new approach, we achieve a translation performance comparable to the existing state-of-the-art phrase-based system on the task of English-to-French translation. Furthermore, qualitative analysis reveals that the (soft-)alignments found by the model agree well with our intuition."*
 
 __Takeaways__
+
 - __Introduces the Attention Mechanism__, a major breakthrough in machine translation and many other 
   sequence-to-sequence tasks. The attention mechanism allows the model to focus on different parts of the source sentence while generating each word in the target sentence, addressing the limitations of fixed-length context vectors in previous encoder-decoder architectures.
 
 # Recurrent Neural Network Regularization
+*Zaremba, Sutskever, Vinyals. 2015* [(PDF)](https://arxiv.org/pdf/1409.2329)
 
-TODO
+*"We present a simple regularization technique for Recurrent Neural Networks (RNNs) with Long Short-Term Memory 
+(LSTM) units. Dropout, the most successful technique for regularizing neural networks, does not work well with RNNs 
+and LSTMs. In this paper, __we show how to correctly apply dropout to LSTMs__, and show that it substantially reduces 
+overfitting on a variety of tasks. These tasks include language modeling, speech recognition, image caption generation, and machine translation."*
+
+__Takeaways__
+
+* Applies dropout only to a subset of the RNNs connections.
+* "By not using dropout on the recurrent connections, the LSTM can benefit from dropout regularization without sacrificing its valuable memorization ability."
 
 # The Unreasonable Effectiveness of Recurrent Neural Networks
 *Andrej Karpathy, 2015* [(Blog Post)](http://karpathy.github.io/2015/05/21/rnn-effectiveness/)
@@ -144,8 +204,9 @@ generate reasonable text using only character-by-character predictions. It's fun
 models were just a few years ago, and how far they've come since.
 
 __Takeaways__
-*"If training vanilla neural nets is optimization over functions, training recurrent nets is optimization over
-programs."*
+
+* "If training vanilla neural nets is optimization over functions, training recurrent nets is optimization over
+programs."
 * Feed-Forward Neural Networks are limited to fixed-sized inputs and fixed-size outputs.
 * RNNs operate on sequences of arbitrary length, making them well-suited for speech recognition, 
   language modeling, and machine translation.
@@ -159,6 +220,7 @@ step-by-step fashion, it explains how the different "gates" of an LSTM unit work
 information.
 
 __Takeaways__
+
 * LSTMs improve on RNNs by adding a piece of __hidden state called a memory cell__ that can store information for 
   long periods of time. This improves their ability to learn from long sequences, and makes them well-suited to natural language processing. In contrast, regular RNNs struggle to connect separate pieces of information, say, words that are far apart in a sentence.
 * An LSTM unit contains a __memory cell__, an __input gate__, an __output gate__ and a __forget gate__ that regulate 
@@ -167,8 +229,19 @@ __Takeaways__
   things happened in those 18 years, including some pretty [dramatic increases in computational power](https://www.flickr.com/photos/jurvetson/51391518506/).
 
 # Deep Speech 2: End-to-End Speech Recognition in English and Mandarin
+*Amodei, et al. 2016* [(PDF)](https://arxiv.org/pdf/1512.02595)
 
-TODO
+*"We show that an end-to-end deep learning approach can be used to recognize either English or Mandarin Chinese 
+speech-two vastly different languages. Because it replaces entire pipelines of hand-engineered components with 
+neural networks, end-to-end learning allows us to handle a diverse variety of speech including noisy environments, accents and different languages. Key to our approach is our application of HPC techniques, enabling experiments that previously took weeks to now run in days. This allows us to iterate more quickly to identify superior architectures and algorithms. As a result, in several cases, our system is competitive with the transcription of human workers when benchmarked on standard datasets. Finally, using a technique called Batch Dispatch with GPUs in the data center, we show that our system can be inexpensively deployed in an online setting, delivering low latency when serving users at scale."*
+
+__Takeaways__
+
+* __End-to-End Learning__ replaces entire pipelines of hand-engineered components (features, acoustic models, 
+  language models, etc.) with neural networks. This is demonstrated on two very different languages: English and 
+  Mandarin.
+* __Highly-optimized training system__ with 8 or 16 GPUs.
+* Models have around 100 million parameters.
 
 # Identity Mappings in Deep Residual Networks
 
@@ -203,18 +276,34 @@ based solely on attention mechanisms, dispensing with recurrence and convolution
 entirely.__ Experiments on two machine translation tasks show..."
 
 __Takeaways__
-* Transformer architecture removes the recurrent (sequential) connections of RNNs. This allows efficient, parallel 
-  training with GPUs.
-* The self-attention mechanism enables the model to weigh the importance of different words in a sentence, 
+
+* __Transformer architecture__ removes the recurrent (sequential) connections of RNNs. This allows efficient, parallel training with GPUs.
+* The __self-attention mechanism__ enables the model to weigh the importance of different words in a sentence, 
   regardless of their position. This allows for capturing long-range dependencies and relationships more effectively than RNNs.
 
 # Kolmogorov Complexity and Algorithmic Randomness
 
-TODO
+*"Looking at a sequence of zeros and ones, we often feel that it is not random, that is, it is not plausible as an 
+outcome of fair coin tossing. Why? The answer is provided by algorithmic information theory: because the sequence is 
+compressible, that is, it has small complexity or, equivalently, can be produced by a short program. This idea, going back to Solomonoff, Kolmogorov, Chaitin, Levin, and others, is now the starting point of algorithmic information theory. The first part of this book is a textbook-style exposition of the basic notions of complexity and randomness; the second part covers some recent work done by participants of the “Kolmogorov seminar” in Moscow (started by Kolmogorov himself in the 1980s) and their colleagues."*
+
+__Takeaways__
+
+* TODO
 
 # Neural Message Passing for Quantum Chemistry
+[(PDF)](https://arxiv.org/pdf/1704.01212)
 
-TODO
+
+*"Supervised learning on molecules has incredible potential to be useful in chemistry, drug discovery, and materials 
+science. Luckily, several promising and closely related neural network models invariant to molecular symmetries have 
+already been described in the literature. __These models learn a message passing algorithm and aggregation procedure 
+to compute a function of their entire input graph__. At this point, the next step is to find a particularly effective 
+variant of this general approach and apply it to chemical prediction benchmarks until we either solve them or reach the limits of the approach. In this paper, we reformulate existing models into a single common framework we call Message Passing Neural Networks (MPNNs) and explore additional novel variations within this framework. Using MPNNs we demonstrate state of the art results on an important molecular property prediction benchmark; these results are strong enough that we believe future work should focus on datasets with larger molecules or more accurate ground truth labels."*
+
+__Takeaways__
+
+* TODO
 
 # Pointer Networks
 
@@ -231,17 +320,15 @@ TODO
 # Scaling Laws for Neural Language Models
 *Kaplan, et al. 2020* [(PDF)](https://arxiv.org/pdf/2001.08361)
 
-*"We study empirical scaling laws for language model performance on the cross-entropy loss.
-__The loss scales as a power-law with model size, dataset size, and the amount of compute
-used for training__, with some trends spanning more than seven orders of magnitude. Other
-architectural details such as network width or depth have minimal effects within a wide
-range. Simple equations govern the dependence of overfitting on model/dataset size and the
-dependence of training speed on model size. These relationships allow us to determine the
-__optimal allocation of a fixed compute budget__. Larger models are significantly more sample-efficient, such that 
-__optimally compute-efficient training involves training very large models
-on a relatively modest amount of data and stopping significantly before convergence.__"*
+*"We study empirical scaling laws for language model performance on the cross-entropy loss. __The loss scales as a 
+power-law with model size, dataset size, and the amount of compute used for training__, with some trends spanning 
+more than seven orders of magnitude. Other architectural details such as network width or depth have minimal effects 
+within a wide range. Simple equations govern the dependence of overfitting on model/dataset size and the dependence 
+of training speed on model size. These relationships allow us to determine the __optimal allocation of a fixed 
+compute budget__. Larger models are significantly more sample-efficient, such that __optimally compute-efficient training involves training very large models on a relatively modest amount of data and stopping significantly before convergence.__"*
 
 __Takeaways__
+
 * __"Language modeling performance improves smoothly and predictably as we appropriately scale up model size, data, 
   and compute."__
 * Language model (Transformer) __performance depends most strongly on scale__: model size, dataset size, and compute 
