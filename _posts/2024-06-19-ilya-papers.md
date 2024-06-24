@@ -24,6 +24,7 @@ notes, etc. In any case, it's a lot of reading! I've highlighted a few that I th
 * [2014 - Quantifying the Rise and Fall of Complexity in Closed Systems](#quantifying-the-rise-and-fall-of-complexity-in-closed-systems)
 * [2015 - Deep Residual Learning for Image Recognition](#deep-residual-learning-for-image-recognition)
 * [__2015 - Neural Machine Translation by Jointly Learning to Align and Translate__](#neural-machine-translation-by-jointly-learning-to-align-and-translate)
+* [2015 - Pointer Networks](#pointer-networks)
 * [2015 - Recurrent Neural Network Regularization](#recurrent-neural-network-regularization)
 * [__2015 - The Unreasonable Effectiveness of Recurrent Neural Networks__](#the-unreasonable-effectiveness-of-recurrent-neural-networks)
 * [__2015 - Understanding LSTM Networks__](#understanding-lstm-networks)
@@ -36,7 +37,6 @@ notes, etc. In any case, it's a lot of reading! I've highlighted a few that I th
 * __[2017 - Attention is All You Need](#attention-is-all-you-need)__
 * [2017 - Kolmogorov Complexity and Algorithmic Randomness](#kolmogorov-complexity-and-algorithmic-randomness)
 * [2017 - Neural Message Passing for Quantum Chemistry](#neural-message-passing-for-quantum-chemistry)
-* [2017 - Pointer Networks](#pointer-networks)
 * [2018 - Relational Recurrent Neural Networks](#relational-recurrent-neural-networks)
 * [2019 - GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism](#gpipe-efficient-training-of-giant-neural-networks-using-pipeline-parallelism)
 * [__2020 - Scaling Laws for Neural Language Models__](#scaling-laws-for-neural-language-models)
@@ -198,6 +198,28 @@ __Takeaways__
 
 - __Introduces the Attention Mechanism__, a major breakthrough in machine translation and many other 
   sequence-to-sequence tasks. The attention mechanism allows the model to focus on different parts of the source sentence while generating each word in the target sentence, addressing the limitations of fixed-length context vectors in previous encoder-decoder architectures.
+
+# Pointer Networks
+*Oriol Vinyals, Meire Fortunato, Navdeep Jaitly. 2015* [(PDF)](https://arxiv.org/pdf/1506.03134)
+
+![Pointer Network](/assets/images/ptr_net.png)
+
+*"We introduce a __new neural architecture__ to learn the conditional probability of an __output sequence with 
+elements that are discrete tokens corresponding to positions in an input sequence__. Such problems cannot be 
+trivially addressed by existent approaches such as sequence-to-sequence and Neural Turing Machines, because the 
+number of target classes in each step of the output depends on the length of the input, which is variable. 
+__Problems such as sorting variable sized sequences, and various combinatorial optimization problems belong to this 
+class__. Our model solves the problem of variable size output dictionaries using a recently proposed mechanism of 
+neural attention. It differs from the previous attention attempts in that, instead of using attention to blend 
+hidden units of an encoder to a context vector at each decoder step, it __uses attention as a pointer to select a 
+member of the input sequence as the output__. We call this architecture a Pointer Net (Ptr-Net). We show Ptr-Nets 
+can be used to learn approximate solutions to three challenging geometric problems -- finding planar convex hulls, computing Delaunay triangulations, and the planar Travelling Salesman Problem -- using training examples alone. Ptr-Nets not only improve over sequence-to-sequence with input attention, but also allow us to generalize to variable size output dictionaries. We show that the learnt models generalize beyond the maximum lengths they were trained on. We hope our results on these tasks will encourage a broader exploration of neural learning for discrete problems."*
+
+__Takeaways__
+* Variable Output Dictionaries: The number of target classes in each step of the output depends on the length of the 
+  input, which is variable. Conventional sequence-to-sequence models require a fixed output vocabulary.
+* At each step of the output, the model uses __attention over the inputs as a pointer to select a member of the input 
+  sequence as the output__. This allows the model to generalize to variable size output dictionaries.
 
 # Recurrent Neural Network Regularization
 *Zaremba, Sutskever, Vinyals. 2015* [(PDF)](https://arxiv.org/pdf/1409.2329)
@@ -367,10 +389,6 @@ variant of this general approach and apply it to chemical prediction benchmarks 
 __Takeaways__
 
 * TODO
-
-# Pointer Networks
-
-TODO
 
 # Relational Recurrent Neural Networks
 
