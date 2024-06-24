@@ -436,8 +436,29 @@ __Takeaways__
 * The memory matrix can be viewed as the matrix of cell states in a 2D-LSTM.
 
 # GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism
+*Hung, et al. 2018* [(PDF)](https://arxiv.org/pdf/1811.06965)
 
-TODO
+![Micro-batch pipelining](/assets/images/gpipe.png)
+
+*"Scaling up deep neural network capacity has been known as an effective approach to improving model quality for 
+several different machine learning tasks. In many cases, increasing model capacity beyond the memory limit of a 
+single accelerator has required developing special algorithms or infrastructure. These solutions are often 
+architecture-specific and do not transfer to other tasks. To address the need for efficient and task-independent 
+model parallelism, we introduce __GPipe, a pipeline parallelism library that allows scaling any network that can be 
+expressed as a sequence of layers__. By pipelining different sub-sequences of layers on separate accelerators, GPipe 
+provides the flexibility of scaling a variety of different networks to gigantic sizes efficiently. Moreover, GPipe 
+utilizes a novel batch-splitting pipelining algorithm, resulting in almost linear speedup when a model is 
+partitioned across multiple accelerators. We demonstrate the advantages of GPipe by training large-scale neural 
+networks on two different tasks with distinct network architectures: (i) Image Classification: We train a 
+557-million-parameter AmoebaNet model and attain a top-1 accuracy of 84.4% on ImageNet-2012, (ii) Multilingual Neural Machine Translation: __We train a single 6-billion-parameter, 128-layer Transformer model on a corpus spanning over 100 languages and achieve better quality than all bilingual models__."*
+
+__Takeaways__
+
+* Increasing model size generally improves model performance, but model growth is outstripping hardware growth.
+* GPipe is a distributed machine learning library that uses synchronous stochastic gradient descent and __pipeline 
+  parallelism__ for training on multiple accelerators.
+* Forward pass: mini-batches are split into micro-batches and pipelined across accelerators. Backward pass: 
+  gradients are accumulated across micro-batches.
 
 # Scaling Laws for Neural Language Models
 *Kaplan, et al. 2020* [(PDF)](https://arxiv.org/pdf/2001.08361)
