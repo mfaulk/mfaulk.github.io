@@ -372,9 +372,15 @@ __Takeaways__
 outcome of fair coin tossing. Why? The answer is provided by algorithmic information theory: because the sequence is 
 compressible, that is, it has small complexity or, equivalently, can be produced by a short program. This idea, going back to Solomonoff, Kolmogorov, Chaitin, Levin, and others, is now the starting point of algorithmic information theory. The first part of this book is a textbook-style exposition of the basic notions of complexity and randomness; the second part covers some recent work done by participants of the “Kolmogorov seminar” in Moscow (started by Kolmogorov himself in the 1980s) and their colleagues."*
 
-__Takeaways__
+[(PDF)](https://www.lirmm.fr/~ashen/kolmbook-eng-scan.pdf)
 
-* TODO
+This is a substantial book, and I haven't read it. I'd suggest looking at [An Introduction to Kolmogorov Complexity 
+and Its Applications](https://link.springer.com/content/pdf/10.1007/978-3-030-11298-1.pd) instead.
+
+__Takeaways__
+* Kolmogorov Complexity is a universal definition for the complexity, or quantity of information, in an object.
+* This differs from Shannon's Entropy, which is the amount of information that needs to be communicated in order to 
+  select an object from a known list of alternatives (symbols).
 
 # Neural Message Passing for Quantum Chemistry
 [(PDF)](https://arxiv.org/pdf/1704.01212)
