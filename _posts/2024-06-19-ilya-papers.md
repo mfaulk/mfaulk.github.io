@@ -69,7 +69,22 @@ org/wiki/Minimum_description_length) and its applications to model selection.
 # Machine Super Intelligence
 *Legg, Shane, 2008* [(PDF)](https://www.vetta.org/documents/Machine_Super_Intelligence.pdf)
 
-TODO
+This thesis sets out to define what it means for an agent to be intelligent. Starting from informal definitions of 
+intelligence, it mathematically defines intelligence in a general, powerful, and elegant way. This leads to the 
+concept of an optimal agent that maximizes its expected reward by interacting with an unknown environment. While not a 
+practical theory -- it's definitions are not computable  -- it maybe provides a theoretical framework for 
+understanding real, suboptimal agents. 
+
+__Takeaways__
+
+- "Intelligence measures an agent’s ability to achieve goals in a wide range of environments."
+- Defines the complexity of an environment as the length of the shortest program that generates the environment's 
+  behavior ([Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity)).
+- Prior probability of an environment decreases exponentially with its complexity ([Algorithmic probability](https://en.wikipedia.org/wiki/Algorithmic_probability)). This 
+  formalizes Occam's razor.
+- Defines The Universal Intelligence of an agent as the expected value of its rewards.
+- Perfect or "universal agents" maximize their expected reward in any computable environment. While not computable
+  (because Kolmogorov complexity is uncomputable), it provides a theoretical upper bound on the intelligence of computable agents.
 
 # The First Law of Complexodynamics
 *Scott Aaronson, 2011.* [(Blog Post)](https://scottaaronson.blog/?p=762)
@@ -134,12 +149,11 @@ __Takeaways__
 This paper continues ideas from [The First Law of Complexodynamics](#the-first-law-of-complexodynamics). I think you 
 can safely skip it.
 
-* The entropy of an n-bit string is often identified with its Kolmogorov complexity, i.e., the length of the shortest 
-  program that generates the string. 
+* The entropy of an n-bit string is often identified with its __Kolmogorov complexity, i.e., the length of the shortest program that generates the string__. 
 * __Kolmogorov complexity is well-known to be uncomputable__ (equivalent to the halting problem), but can maybe be 
-  approximated? "While Kolmogorov complexity and sophistication are useful theoretical notions to model our ideas
+  approximated? *"While Kolmogorov complexity and sophistication are useful theoretical notions to model our ideas
   of entropy and complexity, they cannot be directly applied in numerical simulations, because they
-  are both uncomputable."
+  are both uncomputable."*
 
 # Deep Residual Learning for Image Recognition
 *He, Kaiming, Xiangyu Zhang, Shaoqing Ren, and Jian Sun, 2015* [(PDF)](https://arxiv.org/pdf/1512.03385)
@@ -192,7 +206,8 @@ overfitting on a variety of tasks. These tasks include language modeling, speech
 __Takeaways__
 
 * Applies dropout only to a subset of the RNNs connections.
-* "By not using dropout on the recurrent connections, the LSTM can benefit from dropout regularization without sacrificing its valuable memorization ability."
+* *"By not using dropout on the recurrent connections, the LSTM can benefit from dropout regularization without 
+  sacrificing its valuable memorization ability."*
 
 # The Unreasonable Effectiveness of Recurrent Neural Networks
 *Andrej Karpathy, 2015* [(Blog Post)](http://karpathy.github.io/2015/05/21/rnn-effectiveness/)
@@ -204,8 +219,8 @@ models were just a few years ago, and how far they've come since.
 
 __Takeaways__
 
-* "If training vanilla neural nets is optimization over functions, training recurrent nets is optimization over
-programs."
+* *"If training vanilla neural nets is optimization over functions, training recurrent nets is optimization over
+programs."*
 * Feed-Forward Neural Networks are limited to fixed-sized inputs and fixed-size outputs.
 * RNNs operate on sequences of arbitrary length, making them well-suited for speech recognition, 
   language modeling, and machine translation.
@@ -282,8 +297,21 @@ __Takeaways__
 ![Zeebra](/assets/images/dilatedconvolution.png)
 
 # Order Matters: Sequence to sequence for sets
+*Oriol Vinyals, Samy Bengio, Manjunath Kudlur. 2015* [(PDF)](https://arxiv.org/pdf/1511.06391)
 
-TODO
+*"Sequences have become first class citizens in supervised learning thanks to the resurgence of recurrent neural 
+networks. Many complex tasks that require mapping from or to a sequence of observations can now be formulated with 
+the sequence-to-sequence (seq2seq) framework which employs the chain rule to efficiently represent the joint 
+probability of sequences. In many cases, however, variable sized inputs and/or outputs might not be naturally 
+expressed as sequences. For instance, it is not clear how to input a set of numbers into a model where the task is 
+to sort them; similarly, we do not know how to organize outputs when they correspond to random variables and the 
+task is to model their unknown joint probability. In this paper, we first show using various examples that the order in which we organize input and/or output data matters significantly when learning an underlying model. We then discuss __an extension of the seq2seq framework that goes beyond sequences and handles input sets in a principled way__. In addition, we propose a loss which, by searching over possible orders during training, deals with the lack of structure of output sets. We show empirical evidence of our claims regarding ordering, and on the modifications to the seq2seq framework on benchmark language modeling and parsing tasks, as well as two artificial tasks -- sorting numbers and estimating the joint probability of unknown graphical models."*
+
+__Takeaways__
+
+* Seq2Seq models are inherently order-sensitive, but tasks like sorting are inherently not order-sensitive.
+* Read-Process-Write creates a __permutation-invariant embedding of the input__. This is fed to an LSTM Pointer Network
+* Handles unordered output by searching over possible orders during training. This feels funky...
 
 # Variational Lossy Autoencoder
 
@@ -295,6 +323,7 @@ TODO
 
 # Attention is All You Need
 *Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, Polosukhin. 2017*
+
 [(Helpfully Annotated Paper)](https://nlp.seas.harvard.edu/annotated-transformer/) 
 [(Original Paper)](https://arxiv.org/pdf/1706.03762)
 
