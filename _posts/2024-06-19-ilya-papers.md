@@ -403,8 +403,9 @@ __Takeaways__
   select an object from a known list of alternatives (symbols).
 
 # Neural Message Passing for Quantum Chemistry
-[(PDF)](https://arxiv.org/pdf/1704.01212)
+*Gilmer, et al. 2017*[(PDF)](https://arxiv.org/pdf/1704.01212)
 
+![Message Passing Neural Networks](/assets/images/mpnn_fig_1.png)
 
 *"Supervised learning on molecules has incredible potential to be useful in chemistry, drug discovery, and materials 
 science. Luckily, several promising and closely related neural network models invariant to molecular symmetries have 
@@ -414,7 +415,11 @@ variant of this general approach and apply it to chemical prediction benchmarks 
 
 __Takeaways__
 
-TODO
+* __Message Passing Neural Networks (MPNNs)__ abstracts commonalities of several models for graph-based data. Nodes 
+  iteratively pass messages to their neighbors, who aggregate these messages and update their own state. Finally, a 
+  readout function maps the final node states to the graph's global state.
+* Uses [set2set](https://arxiv.org/abs/1511.06391) to produce a readout that is invariant to graph order. 
+
 
 # Relational Recurrent Neural Networks
 *Santoro, Adam, et al. 2018* [(PDF)](https://arxiv.org/pdf/1806.01822)
@@ -436,7 +441,7 @@ __Takeaways__
 * The memory matrix can be viewed as the matrix of cell states in a 2D-LSTM.
 
 # GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism
-*Hung, et al. 2018* [(PDF)](https://arxiv.org/pdf/1811.06965)
+*Hung, et al. 2018* [(PDF)](https://arxiv.org/pdf/1811.06965) [(Blog)](https://research.google/blog/introducing-gpipe-an-open-source-library-for-efficiently-training-large-scale-neural-network-models/)
 
 ![Micro-batch pipelining](/assets/images/gpipe.png)
 
@@ -455,8 +460,7 @@ networks on two different tasks with distinct network architectures: (i) Image C
 __Takeaways__
 
 * Increasing model size generally improves model performance, but model growth is outstripping hardware growth.
-* GPipe is a distributed machine learning library that uses synchronous stochastic gradient descent and __pipeline 
-  parallelism__ for training on multiple accelerators.
+* GPipe is a distributed machine learning [library](https://github.com/tensorflow/lingvo/blob/master/lingvo/core/gpipe.py) that uses synchronous stochastic gradient descent and __pipeline parallelism__ for training on multiple accelerators.
 * Forward pass: mini-batches are split into micro-batches and pipelined across accelerators. Backward pass: 
   gradients are accumulated across micro-batches.
 
