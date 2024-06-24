@@ -394,11 +394,26 @@ variant of this general approach and apply it to chemical prediction benchmarks 
 
 __Takeaways__
 
-* TODO
+TODO
 
 # Relational Recurrent Neural Networks
+*Santoro, Adam, et al. 2018* [(PDF)](https://arxiv.org/pdf/1806.01822)
 
-TODO
+*"Memory-based neural networks model temporal data by leveraging an ability to remember information for long periods. 
+It is unclear, however, whether they also have an ability to perform complex relational reasoning with the 
+information they remember. Here, we first confirm our intuitions that standard memory architectures may struggle at 
+tasks that heavily involve an understanding of the ways in which entities are connected -- i.e., tasks involving 
+relational reasoning. We then improve upon these deficits by using a __new memory module -- a Relational Memory Core 
+(RMC) -- which employs multi-head dot product attention to allow memories to interact__. Finally, we test the RMC on 
+a suite of tasks that may profit from more capable relational reasoning across sequential information, and show large gains in RL domains (e.g. Mini PacMan), program evaluation, and language modeling, achieving state-of-the-art results on the WikiText-103, Project Gutenberg, and GigaWord datasets."*
+
+__Takeaways__
+
+* "[A]n architectural backbone upon which a model can learn to compartmentalize information, and learn to compute
+  interactions between compartmentalized information."
+* Relational Memory Core (RMC) maintains a matrix of row-wise memories. Updates are via attention over previous
+  memories and input.
+* The memory matrix can be viewed as the matrix of cell states in a 2D-LSTM.
 
 # GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism
 
