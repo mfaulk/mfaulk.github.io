@@ -7,7 +7,7 @@ stack of all the stuff I need to know to actually be relevant in this space. And
 research papers and said, ‘If you really learn all of these, you’ll know 90% of what matters today.’ And I did. I plowed through all those things and it all started sorting out in my head."*
 
 The exact list seems to be lost to time, but something like it recently [resurfaced on Xwitter](https://x.
-com/keshavchan/status/1787861946173186062). Regardless of origin, the list includes some landmark papers in the 
+com/keshavchan/status/1787861946173186062). Regardless of origin, the list includes some interesting papers in the 
 development of large language models — i.e., the class of artificial neural networks responsible for things like ChatGPT. Together, they tell a story of how we learned to assemble basic neural units into increasingly sophisticated architectures, what those architectures are capable of learning, and the practical techniques that make training them possible.
 
 # "Ilya's List" of AI Papers
@@ -53,8 +53,8 @@ __Takeaways__
 
 The [Minimum Description Length Principle](https://en.wikipedia.org/wiki/Minimum_description_length) asserts that the best model of some data is the one that minimizes the sum of the length of the description of the model and the length of the data encoded using that model.
 
-* Applies the MDL principle to neural networks to control model complexity and prevent overfitting.
-* Uses weight sharing to minimize the description length of the weights: The same weight is applied to multiple 
+* __Applies the MDL principle to neural networks__ to control model complexity and prevent overfitting.
+* Uses __weight-sharing__ to minimize the description length of the weights: The same weight is applied to multiple 
   connections in the network, reducing the number of free parameters, and thus the model complexity.
 
 # A Tutorial Introduction to the Minimum Description Length Principle
@@ -65,9 +65,9 @@ __Takeaways__
 A clearly-written intro to the [Minimum Description Length Principle](https://en.wikipedia.
 org/wiki/Minimum_description_length) and its applications to model selection.
 
-* Learning as data compression: Every regularity in data may be used to compress that data, and learning can be 
+* __Learning as data compression__ Every regularity in data may be used to compress that data, and learning can be 
   equated with finding those regularities.
-* MDL as model selection: The best model is the one that minimizes the sum of the length of the description of the 
+* __MDL as model selection__ The best model is the one that minimizes the sum of the length of the description of the 
   model and the length of the data encoded using that model.
 
 # Machine Super Intelligence
@@ -82,11 +82,11 @@ understanding real, suboptimal agents.
 __Takeaways__
 
 - "Intelligence measures an agent’s ability to achieve goals in a wide range of environments."
-- Defines the complexity of an environment as the length of the shortest program that generates the environment's 
+- The __complexity of an environment__ is the length of the shortest program that generates the environment's 
   behavior ([Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity)).
 - Prior probability of an environment decreases exponentially with its complexity ([Algorithmic probability](https://en.wikipedia.org/wiki/Algorithmic_probability)). This 
   formalizes Occam's razor.
-- Defines The Universal Intelligence of an agent as the expected value of its rewards.
+- The __Universal Intelligence__ of an agent is the expected value of its rewards.
 - Perfect or "universal agents" maximize their expected reward in any computable environment. While not computable
   (because Kolmogorov complexity is uncomputable), it provides a theoretical upper bound on the intelligence of computable agents.
 
@@ -344,8 +344,29 @@ __Takeaways__
 TODO
 
 # A Simple Neural Network Module for Relational Reasoning
+*Santoro, et al. 2017* [(PDF)](https://arxiv.org/pdf/1706.01427)
 
-TODO
+![Relational Reasoning](/assets/images/rn_fig2.png)
+
+"*Relational reasoning is a central component of generally intelligent behavior, but has proven
+difficult for neural networks to learn. In this paper we describe how to use Relation Networks
+(RNs) as __a simple plug-and-play module to solve problems that fundamentally hinge on relational
+reasoning__. We tested RN-augmented networks on three tasks: visual question answering
+using a challenging dataset called CLEVR, on which we achieve state-of-the-art, super-human
+performance; text-based question answering using the bAbI suite of tasks; and complex reasoning
+about dynamic physical systems. Then, using a curated dataset called Sort-of-CLEVR we show
+that __powerful convolutional networks do not have a general capacity to solve relational questions__, but can gain 
+this capacity when augmented with RNs. __Our work shows how a deep learning architecture equipped with an RN module 
+can implicitly discover and learn to reason about entities and their relations__.*"
+
+__Takeaways__
+
+* __Relational reasoning__ is the ability to understand, infer, and manipulate the relationships 
+  between different entities or pieces of information.
+* Achieves super-human performance on the [CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) visual reasoning task.
+* RNs constrain the functional form of a NN so that it captures common properties of relational reasoning, in the 
+  same way that convolutional layers capture translational invariance, or recurrent layers capture sequential dependencies.
+* RNs operate on a set of objects, and learn (pairwise) relations between them.
 
 # Attention is All You Need
 *Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, Polosukhin. 2017*
@@ -374,8 +395,7 @@ compressible, that is, it has small complexity or, equivalently, can be produced
 
 [(PDF)](https://www.lirmm.fr/~ashen/kolmbook-eng-scan.pdf)
 
-This is a substantial book, and I haven't read it. I'd suggest looking at [An Introduction to Kolmogorov Complexity 
-and Its Applications](https://link.springer.com/content/pdf/10.1007/978-3-030-11298-1.pd) instead.
+This is a substantial book, and I've only skimmed it. I'd suggest looking at [An Introduction to Kolmogorov Complexity and Its Applications](https://link.springer.com/content/pdf/10.1007/978-3-030-11298-1.pd) instead.
 
 __Takeaways__
 * Kolmogorov Complexity is a universal definition for the complexity, or quantity of information, in an object.
