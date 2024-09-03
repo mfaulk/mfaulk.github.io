@@ -226,7 +226,7 @@ The training loss looks quite nice:
 
 
 # Evaluation
-Finally, let's see how it looks. The top row of figures are the inputs, and the bottom row are output reconstructions. For a bottleneck size of 150, this is about a 5.2:1 data compression. Not too shabby.
+Finally, let's see how it looks. The top row of figures are the inputs, and the bottom row are output reconstructions. For a bottleneck size of 150, this is about a 5.2:1 data compression. 
 
 ![MNIST Autoencoder Reconstruction](/assets/images/mnist_autoencoder_150_reconstruction.png)
 
