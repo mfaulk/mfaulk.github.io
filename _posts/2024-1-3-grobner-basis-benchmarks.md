@@ -1,4 +1,4 @@
-## Benchmarking Grobner Basis Algorithms
+## Benchmarking Gröbner Basis Algorithms
 
 In order to better understand the performance of different algorithms for computing Gröbner bases, I'm working through some of the benchmark problems.
 
