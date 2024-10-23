@@ -1,0 +1,40 @@
+Year,Protocol,Setup,Prover,Proof Size,Verifier,Recurse,Fold
+2013,BSCTV 13 SNARK,Trusted: Universal,$O(n \log n)$,$O(1)$,$O(1)$,,
+2013,Pinocchio,Trusted: Circuit-specific,,,,,
+2016,Groth16,Trusted: Circuit-specific,$O(n \log n)$,$O(1)$,$O(1)$,No,
+2016,Hyrax,Transparent,$O(n + m * g)$,$O(m + \sqrt w)$,$O(m + \sqrt w)$,No,
+2017,BCG+,,,,,,
+2017,Bulletproofs,Transparent,$O(n)$,$O(\log n)$,$O(n)$,No?,
+2017,Ligero,Transparent,$O(n \log n)$,$O(\sqrt n)$,$O(n)$,No?,
+2018,Aurora,Transparent,$O(n \log n)$,$O(\log^2 n)$,$O(n)$,No?,
+2018,STARKs,Transparent,O(n \log^2 n),$O(\log^2 n)$,$O(\log^2 n)$,Maybe?,
+2019,Fractal,Transparent,$O(n \log n)$,$O(\log^2 n)$,$O(\log^2 n)$,Yes,
+2019,Halo,Transparent,$O(n \log n)$,$O(\log n)$,$O(n)$,Yes,
+2019,Libra,Trusted: Universal,$O(n)$,$O(d \log n)$,$O(d \log n)$,,
+2019,PLONK,"Trusted: Updatable, Universal",$O(n \log n)$,,,,
+2019,Sonic,"Trusted: Updatable, Universal",$O(n \log n)$,$O(1)$,$O(1)$,,
+2019,SuperSonic,Transparent,$O(n \log n)$,$O(\log n)$,$O(\log n)$,,
+2019,Virgo,Transparent,$O( C + n \log n )$,$O (D \log C + \log^2 n)$,$O( D \log C + \log^2 n)$,,
+2020,Dory,Transparent,,,,,
+2020,Halo Infinite,,,,,Yes,
+2020,Marlin,"Trusted: Updatable, Universal",$O(n \log n)$,,,,
+2020,Quarks: Kopis,Transparent,,,,,
+2020,Quarks: Xiphos,Transparent,,,,,
+2020,Spartan CL,Transparent,$O(n \log n)$,$O(\log^2 n)$,$O(\log^2 n)$,Yes?,
+2020,Spartan DL,Transparent,$O(n)$,$O(\sqrt n)$,$O(\sqrt n)$,Yes?,
+2020,Spartan KE,Trusted,$O(n)$,$O(\log^2 n)$,$O(\log^2 n)$,Yes?,
+2020,Spartan RO,Transparent,$O(n \log n)$,$O(\log^2 n)$,$O(\log^2 n)$,Yes?,
+2021,Brakedown,Transparent,$O(n)$,,,,
+2021,Brakedown: Shockwave,,,,,,
+2021,Nova,,$O(n)$,$O(\log n)$,$O(n)$ or $O(\log n)$,Yes,Yes
+2022,HyperPlonk,,$O(n)$,,,,
+2022,Orion,,$O(n)$,$O(\log^2 n)$,$O(\log^2 n)$,,
+2022,Plonky2,,,,,Yes,
+2022,SuperNova,,,,,Yes,Yes
+2023,Binius,,,,,,
+2023,HyperNova,,,,,Yes,Yes
+2023,ProtoGalaxy,,,,,Yes,Yes
+2023,Protostar,,,,,Yes,Yes
+2023,SuperSpartan,,,,,,
+2024,LatticeFold,,,,,Yes,Yes
+,Halo2,,,,,,
