@@ -1,15 +1,11 @@
 ## The Evolution of SNARKs: Interactive Proofs to Groth16
 
 This post is a high-level recap of the foundational ideas that led to the first practical zk-SNARKs. 
-There's a lot to cover, and so this post focuses on the developments leading up to the introduction of the Groth16 SNARK. Groth16 feels like a good milestone: it was one of the first SNARKs used in practice, and its small proofs and fast verification are still, largely, unmatched today.
+There's a lot to cover, and so this post focuses on the developments leading up to the introduction of the Groth16 SNARK. Groth16 feels like a good milestone: it was one of the first SNARKs used in practice, and its small proofs and fast verification are still, [largely](https://eprint.iacr.org/2024/916), unmatched today.
 
-zk-SNARKs are "zero-knowledge Succinct Non-Interactive Arguments of Knowledge". There's a lot to unpack there, so we'll take it piece by piece.
+zk-SNARKs are "zero-knowledge Succinct Non-Interactive Arguments of Knowledge". There's a lot to unpack, so we'll take it piece by piece.
 
 # New ways of proving: Interactive Proofs and Zero Knowledge
-
-Interactive Proofs introduced by [GMR'85] and [Babai 85]
-- [GMR 85/89] The knowledge complexity of interactive proof-systems
-- [Babai 85] Trading Group Theory for Randomness
 
 In the late 1980s, two pivotal papers by Shafi Goldwasser, Silvio Micali, and Charles Rackoff (1989) and by László Babai (1988) advanced the concept of *interactive proofs* (IPs), which extended the NP proof system to allow interaction and randomness. Goldwasser, Micali, and Rackoff introduced an interactive proof system allowing the verifier to make private random coin tosses. Babai’s approach, known as Arthur-Merlin games, instead formalized a model where coin tosses are public. These groundbreaking contributions were recognized jointly with the [1993 Gödel Prize](https://sigact.org/prizes/g%C3%B6del/1993.html).
 
@@ -17,15 +13,20 @@ In the late 1980s, two pivotal papers by Shafi Goldwasser, Silvio Micali, and Ch
 
 *"Independently of GMR, and published in the same STOC ’85, was a paper of Babai, Trading Group Theory for Randomness. This paper was later published in journal version as Arthur-Merlin Games: A Randomized Proof System, and a Hierarchy of Complexity Classes, with Moran as a coauthor; in fact, this paper shared the first ever Godel Prize with GMR"* — [A history of the PCP Theorem](https://courses.cs.washington.edu/courses/cse533/05au/pcp-history.pdf)
 
+Goldwasser, Micali, and Rackoff also introduced the concept of zero-knowledge proofs, which allow a prover to convince a verifier that a statement is true without revealing anything else.
+
+- [GMR 85] [The knowledge complexity of interactive proof-systems](https://dl.acm.org/doi/abs/10.1145/3335741.3335750)
+- [Babai 85] [Trading Group Theory for Randomness](https://dl.acm.org/doi/pdf/10.1145/22145.22192)
+
 
 # IPs: Randomness and Interaction
-Relaxing the "classical" notion of proofs (as represented by NP) to allow for randomness and rounds of interaction between the prover and the verifier yields surprising power.
+Relaxing the "classical" notion of proofs to allow for randomness and rounds of interaction between the prover and the verifier yields surprising power. It turns out that IP = PSPACE [Shamir '90], which formalizes that interactive proofs are far more powerful than classic (i.e, NP) proofs.
 
 "Interactive proofs (IPs) [GMR'85] allow proof-verification to be randomized and interactive, which seemingly confers them much more power than their deterministic (and non-interactive) counterparts" — [A PCP Theorem for Interactive Proofs and Applications](https://eprint.iacr.org/2021/915)
 
-It turns out that IP = PSPACE [Shamir '90], which formalizes that interactive proofs are far more powerful than classical static (i.e, NP) proofs.
+"We will see soon that the class IP is in fact equal to PSPACE, the class of all languages solvable by algorithms using polynomial space (and possibly exponential time). PSPACE is believed to be a vastly
+bigger class of languages than NP, so this is one formalization of the statement that “interactive proofs are far more powerful than classical static (i.e, NP) proofs”."
 
-Both randomness and interaction are required.
 
 # Non-Interaction and the Common Reference String
 
@@ -223,41 +224,46 @@ https://medium.com/degate/behind-degates-innovation-the-integral-role-of-groth16
 
 # References
 
-[GMR 85/89] The knowledge complexity of interactive proof-systems
+**[GMR '85] [The knowledge complexity of interactive proof-systems](https://dl.acm.org/doi/abs/10.1145/3335741.3335750)**
+- Introduces private-coin Interactive Proofs, Zero-Knowledge Proofs
 
-[Babai 85] Trading Group Theory for Randomness
+**[Babai '85] [Trading Group Theory for Randomness](https://dl.acm.org/doi/pdf/10.1145/22145.22192)**
+- Introduces public-coin Interactive Proofs (Arthur-Merlin)
 
-[Brassard, Chaum, Crepeau 88] Minimum Disclosure Proofs of Knowledge
+**[BCC '88] Minimum Disclosure Proofs of Knowledge**
+- Introduces [Argument Systems](https://people.cs.georgetown.edu/jthaler/extensionsandsumcheck.pdf#page=3.55)
 
-[BFM 88] Non-interactive zero-knowledge and its applications
-- NIZKs, Setup produces circuit-specific common reference string (CRS)
+**[BFM '88] [Non-interactive zero-knowledge and its applications](https://dl.acm.org/doi/abs/10.1145/3335741.3335757)**
+- NIZKs, Introduces the circuit-specific common reference string (CRS) model
 
-[Ben-Or 90] Everything Provable is Provable in Zero-Knowledge
+**[Ben-Or '90] [Everything Provable is Provable in Zero-Knowledge](https://dl.acm.org/doi/pdf/10.5555/88314.88333)**
+- Every language that admits an interactive proof admits a (computational) zero-knowledge interactive proof
 
-[DMP 90] 
+**[DMP '90] [Non-interactive zero-knowledge with preprocessing]()**
 
-[GMW 91] Proofs that yield nothing but their validity or all languages in NP have zero-knowledge proof systems
-- The first zero-knowledge argument for an NP-complete problem (Graph 3-Coloring).
+**[GMW '91] [Proofs that yield nothing but their validity or all languages in NP have zero-knowledge proof systems](https://dl.acm.org/doi/abs/10.1145/116825.116852)**
+- First zero-knowledge argument for an NP-complete problem (Graph 3-Coloring)
 
-[LFKN 92] Algebraic methods for interactive proof systems (Sum-Check protocol)
+**[LFKN '92] [Algebraic methods for interactive proof systems](https://dl.acm.org/doi/abs/10.1145/146585.146605)**
+- Every language in the polynomial-time hierarchy has an interactive proof system
+- Introduces Sum-Chech pnotocol
 
-[Babai 91] Checking computations in polylogarithmic time
+**[Babai '91] [Checking computations in polylogarithmic time](https://dl.acm.org/doi/pdf/10.1145/103418.103428)**
 
-[AS'92] Probabilistic checking of proofs: a new characterization of NP 
+**[AS '92] [Probabilistic checking of proofs: a new characterization of NP](https://dl.acm.org/doi/10.1145/273865.273901)**
+- Introduces Probabilistically-Checkable Proofs (PCPs)
 
-[ALM+'92] Proof verification and the hardness of approximation problems
+**[Kilian '92] [A note on efficient zero-knowledge proofs and arguments](https://people.csail.mit.edu/vinodv/6892-Fall2013/efficientargs.pdf)**
 
-[Kilian '92] A note on efficient zero-knowledge proofs and arguments
+**[Micali '94] [CS proofs](https://ieeexplore.ieee.org/abstract/document/365746/)**
 
-[Micali '94] CS proofs, maybe cite the 2000 version
+**[Kilian '95] [Improved efficient arguments: Preliminary version](https://link.springer.com/chapter/10.1007/3-540-44750-4_25)**
 
-[Kilian 95] Improved efficient arguments: Preliminary version
+**[BG '02] [Universal arguments and their applications](todo)**
 
-[BG 02] Universal arguments and their applications
+**[IKO '07] [Efficient Arguments without Short PCPs, Ishai, Kushilevitz, and Ostrovsky](todo)**
 
-[IKO'07] Efficient Arguments without Short PCPs, Ishai, Kushilevitz, and Ostrovsky
-
-[GKR 08] 
+**[GKR '08] [Delegating Computation: Interactive Proofs for Muggles](todo)**
 
 [Groth '10] Short pairing-based non-interactive zero-knowledge arguments
 
