@@ -3,8 +3,6 @@
 This post is a high-level recap of the foundational ideas that led to the first practical zk-SNARKs. 
 There's a lot to cover, and so this post focuses on the developments leading up to the introduction of the Groth16 SNARK. Groth16 feels like a good milestone: it was one of the first SNARKs used in practice, and its small proofs and fast verification are still, [largely](https://eprint.iacr.org/2024/916), unmatched today.
 
-zk-SNARKs are "zero-knowledge Succinct Non-Interactive Arguments of Knowledge". There's a lot to unpack, so we'll take it piece by piece.
-
 # New ways of proving: Interactive Proofs and Zero Knowledge
 
 In the late 1980s, two pivotal papers by Shafi Goldwasser, Silvio Micali, and Charles Rackoff (1989) and by László Babai (1988) advanced the concept of *interactive proofs* (IPs), which extended the NP proof system to allow interaction and randomness. Goldwasser, Micali, and Rackoff introduced an interactive proof system allowing the verifier to make private random coin tosses. Babai’s approach, known as Arthur-Merlin games, instead formalized a model where coin tosses are public. These groundbreaking contributions were recognized jointly with the [1993 Gödel Prize](https://sigact.org/prizes/g%C3%B6del/1993.html).
@@ -55,7 +53,7 @@ The first zero-knowledge argument for an NP-complete problem (Graph 3-Coloring) 
 
 # PCPs: Probabilistically Checkable Proofs
 The development of IPs, in turn, led to probabilistically checkable proofs (PCPs). 
-IPs also led to hardness of approximation results, see The Tale of the PCP Theorem. I think this material ties into a number of complexity theory results (IP = PSPACE, and MIP = NEXP), hardness of approximations. 
+IPs also led to hardness of approximation results, see The Tale of the PCP Theorem. This material ties into a number of complexity theory results (IP = PSPACE, and MIP = NEXP), hardness of approximations. 
 
 - [Babai 91] Checking computations in polylogarithmic time.
 - [AS'92] Probabilistic checking of proofs: a new characterization of NP.
@@ -185,22 +183,22 @@ This paper also served as the theoretical foundation of the first SNARKs to see 
 - Similar techniques to KZG commitments?
 
 Good overviews
-- The Mathematical Mechanics Behind the Groth16 Zero-knowledge Proving
-- Remco Bloemen gives a good overview of Groth16
+- [The Mathematical Mechanics Behind the Groth16 Zero-knowledge Proving](https://kayleegeorge.github.io/math110_WIM.pdf), Kaylee George.
+- [Groth16](https://xn--2-umb.com/22/groth16/) by Remco Bloemen.
 
 In a nutshell: Groth16 starts by creating an R1CS instance of an arithmetic circuit. The R1CS instance is transformed into a Quadratic Arithmetic Program (QAP), which encodes the arithmetic cornstraints as polynomial vectors. The QAP consists of three polynomials (from the A, B, C matrices) and a solution polynomial (derived from the solution vector z). These polynomials are computed via Lagrange interpolation (probably interpolation via FFT). The QAP is verified by showing existence of a low-degree quotient polynomial. The next step is converting the QAP into a NIZK argument
 
 "This paper, colloquially referred to as Groth16, presented a refinement of GGPR’s SNARKs that achieves state-of-the-art concrete verification costs even today (proofs are 3 group elements, and verification is dominated by three pairing operations, at least assuming the public input is short). Security is proved in the generic group model."
 https://a16zcrypto.com/posts/article/zero-knowledge-canon/#section--6
 
-"Succinct NIZK. We construct a NIZK argument for arithmetic circuit satisfiability
+*"Succinct NIZK. We construct a NIZK argument for arithmetic circuit satisfiability
 where a proof consists of only 3 group elements. In addition to being small, the proof
 is also easy to verify. The verifier just needs to compute a number of exponentiations
 proportional to the statement size and check a single pairing product equation, which
 only has 3 pairings. Our construction can be instantiated with any type of pairings
-including Type III pairings, which are the most efficient pairings."
+including Type III pairings, which are the most efficient pairings."*
 
-"All pairing-based SNARKs in the literature follow a common paradigm
+*"All pairing-based SNARKs in the literature follow a common paradigm
 where the prover computes a number of group elements using generic group operations
 and the verifier checks the proof using a number of pairing product equations. Bitansky
 et al. [BCI+13] formalize this paradigm through the definition of linear interactive proofs
@@ -211,7 +209,7 @@ LIP, it can be compiled into a SNARK by executing the equations “in the expone
 using pairing-based cryptography. One source of our efficiency gain is that we design
 a LIP system for arithmetic circuits where the prover only sends 3 field elements. In
 comparison, the quadratic arithmetic programs by [GGPR13,PHGR13] correspond to
-LIPs where the prover sends 4 field elements."
+LIPs where the prover sends 4 field elements."*
 https://eprint.iacr.org/2016/260.pdf#page=5
 
 
@@ -279,10 +277,10 @@ https://medium.com/degate/behind-degates-innovation-the-integral-role-of-groth16
 [Groth16] On the Size of Pairing-based Non-interactive Arguments
 
 # Further Reading
-zk-SNARKs: A Gentle Introduction, Anca Nitulescu
+**[zk-SNARKs: A Gentle Introduction](https://www.di.ens.fr/~nitulesc/files/Survey-SNARKs.pdf)**, Anca Nitulescu.
 - This is an excellent read. Section 2 describes the historical evolution of proofs and arguments, and parallels much of this blog post — I wish I had read it sooner!
 
-Proofs, arguments, and zero-knowledge, Justin Thaler, 2023. 
+**[Proofs, arguments, and zero-knowledge](https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.pdf)**, Justin Thaler, 2023.
 - Another excellent read, and source for much of this post. Also check out his course on Probabilistic Proof Systems.
 
-https://a16zcrypto.com/posts/article/zero-knowledge-canon/, Especially Section 6
+**[a16zcrypto's Zero Knowledge Canon](https://a16zcrypto.com/posts/article/zero-knowledge-canon)**, Especially Section 6.
