@@ -2,9 +2,17 @@
 
 Install prerequisites, rbenv, and ruby-build:
 
+**On Ubuntu/Debian:**
+
     sudo apt update
     sudo apt install -y git ruby-full build-essential zlib1g-dev
     sudo apt install rbenv ruby-build
+
+**On Fedora:**
+
+    sudo dnf update
+    sudo dnf install -y git ruby ruby-devel @development-tools zlib-devel
+    sudo dnf install rbenv ruby-build
 
 Add the following to your .bashrc (and then source ~/.bashrc):
 
