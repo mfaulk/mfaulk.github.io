@@ -28,13 +28,13 @@ Install a version of Ruby via rbenv:
     rbenv install -L
     
     # install a Ruby version:
-    rbenv install 3.1.2
+    rbenv install 3.4.6
 
 And set the version to use:
 
-    rbenv global 3.1.2   # set the default Ruby version for this machine
+    rbenv global 3.4.6   # set the default Ruby version for this machine
     # or:
-    rbenv local 3.1.2    # set the Ruby version for this directory
+    rbenv local 3.4.6    # set the Ruby version for this directory
 
 Sanity check:
 

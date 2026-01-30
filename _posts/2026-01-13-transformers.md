@@ -1,6 +1,6 @@
 # Deep Learning: Transformers
 
-This post unpacks the original transformer from first principles. We'll working through the intuition, architecture, and a PyTorch implementation. By the end, you should be able to train and run your own transformer, and feel comfortable with each component in this diagram:
+This post is a detailed look at the original Transformer. We'll working through the intuition, architecture, and a PyTorch implementation. By the end, you should be able to train and run your own transformer, and feel comfortable with each component in this diagram:
 
 <figure style="text-align: center;">
   <img src="/assets/images/transformer-architecture.png" alt="Transformer Architecture" style="max-width: 100%; height: auto; margin: auto;">
@@ -9,7 +9,7 @@ This post unpacks the original transformer from first principles. We'll working 
  
 # The Transformer
 
-In less than a decade, transformers have become the dominant architecture in modern machine learning. Introduced by Vaswani et al. in the 2017 paper *Attention Is All You Need*, the transformer architecture replaced recurrence and convolution with a single mechanism: attention. Earlier sequence models like RNNs and LSTMs compressed all prior information into a fixed-length hidden state, forcing the network to distill an entire sequence into a single vector. In contrast, the transformer allows each token to directly "attend to" every other token, and produces a representation of the token that incorporates context from the most relevant parts of the entire input.
+In less than a decade, transformers have become the dominant architecture in modern machine learning. (TODO: transformers and attention underpin most things in the AI space, including text embeddings and generative LLMs) Introduced by Vaswani et al. in the 2017 paper *Attention Is All You Need*, the transformer architecture replaced recurrence and convolution with a single mechanism: attention. Earlier sequence models like RNNs and LSTMs compressed all prior information into a fixed-length hidden state, forcing the network to distill an entire sequence into a single vector. In contrast, the transformer allows each token to directly "attend to" all others, producing a representation of the token that incorporates context from the most relevant parts of the entire input.
 
 This section steps through the definition and implementation of each part of the diagram:
 
@@ -26,22 +26,29 @@ Before getting started, let's define some symbols for the dimensions involved, a
 ```python
 # Dimensions
 
-# B - Batch size
-# T - Sequence length
-# D - d_model, embedding dimension
+# B    Batch size
+# T    Sequence length
+# T_q  When computing cross-attention, sequence length corresponding to queries
+# T_k  When computing cross-attention, sequence length corresponding to keys and values
+# D    Dimension of keys and queries, often written d_k
+# d_v  Dimension of values. This post assumes d_v = D
+# H    Attention head dimension
 ```
 
 ```python
-
+from typing import Optional, Tuple
 import math
+
 import torch
 import torch.nn.functional as F
-from typing import Tuple
 
 ```
 
 ### If Attention is All You Need, What *Don't* You Need? Recurrence.
-Before transformers, most sequence-to-sequence models relied on recurrent neural networks (RNNs) and their more sophisticated variants like LSTMs and GRUs. These architectures process sequences one element at a time, updating a hidden state as each new token arrives. This design gives RNNs a natural sense of order but also serious limitations: long-range dependencies are difficult to capture, gradients tend to vanish over many time steps, and the inherently sequential nature of recurrence makes training slow and difficult to parallelize.
+
+"We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely"
+
+Before transformers, most sequence-to-sequence models relied on recurrent neural networks (RNNs) and their more sophisticated variants like LSTMs and GRUs (TODO: links?). These architectures process sequences one element at a time, updating a hidden state as each new token arrives. This design gives RNNs a natural sense of order but also serious limitations: long-range dependencies are difficult to capture, gradients tend to vanish over many time steps, and the inherently sequential nature of recurrence makes training slow and difficult to parallelize.
 
 <figure style="text-align: center;">
   <img src="/assets/images/seq-to-seq-encoder-decoder.png" alt="Encoder-Decoder" style="max-width: 100%; height: auto; margin: auto;">
@@ -49,7 +56,7 @@ Before transformers, most sequence-to-sequence models relied on recurrent neural
 </figure>
 
 
-A specific example: The sequence-to-sequence model introduced by Sutskever et al. (2014) extended RNNs into an encoder-decoder framework, where the encoder compressed the entire input sequence into a single fixed-length context vector, and the decoder generated the output sequence from it. This worked well for short sentences, but as sequences grew longer, that single vector became a bottleneck—forcing the network to represent all relevant information in a narrow space. Transformers broke from this paradigm entirely. Instead of a fixed-length context vector, transformers process all tokens simultaneously and model the relationships between each pair of tokens using a mechanism called *attention*.
+A specific example: The sequence-to-sequence model introduced by Sutskever et al. (2014) extended RNNs into an encoder-decoder framework, where the encoder compressed the entire input sequence into a single fixed-length context vector, and the decoder generated the output sequence from it. This worked well for short sentences, but as the sequences grow longer, that single vector becomes a bottleneck, forcing the network to represent all relevant information in a narrow space. Transformers break from this paradigm. Instead of a fixed-length context vector, transformers process all tokens simultaneously and model the relationships between each pair of tokens using a mechanism called *attention*.
 
 ## Attention
 
@@ -87,7 +94,7 @@ For a single query, we have
   <figcaption>Scaled dot product attention</figcaption>
 </figure>
 
-The scaling term $\sqrt(d_k)$ in the denominator serves to normalize the magnitude of the dot products between queries and keys. Without it, when the dimensionality $d_k$ is large, the dot products tend to grow in magnitude, pushing the softmax function into regions where it becomes extremely peaked. causing gradients to vanish and learning to become unstable. This is evident from the gradients of the softmax function w.r.t its inputs. Recall that the softmax of a vector $z$ is given by
+The scaling term $\sqrt(d_k)$ in the denominator serves to normalize the magnitude of the dot products between queries and keys. Without it, when the dimensionality $d_k$ is large, the dot products tend to grow in magnitude, pushing the softmax function into regions where it becomes extremely peaked. As a result, gradients to vanish and learning slows. We can see this by looking at the gradients of the softmax function w.r.t its inputs. Recall that the softmax of a vector $z$ is given by
 
 $$ \text{softmax}(\mathbf{z}) = \frac{e^{z_i}}{ \sum_{j = 1}^N e^{z_j}}$$
 
@@ -130,7 +137,6 @@ def scaled_dot_product_attention(
     context = torch.matmul(weights.unsqueeze(0), V).squeeze(0)
 
     return context, weights
-
 ```
 
 
@@ -145,8 +151,10 @@ So far, our attention mechanism takes a sequence of elements (i.e., keys and val
 In the special case where the queries, keys, and values all come from the same sequence, we call this *self-attention*. 
 Self-attention allows every element in a sequence to attend to every other element, including itself. This means that each token’s representation is updated based on a weighted combination of all tokens in the sequence, where the weights reflect their relevance to that token.
 
-TODO: Self-attention diagram
-
+<figure style="text-align: center;">
+  <img src="/assets/images/attention-weights-small.png" alt="Attention weights" style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Self-attention weights for each pair of positions. Image credit: ???</figcaption>
+</figure>
 
 Let's update the implementation of scaled_dot_product_attention to compute attention for multiple queries, and allow for an optional dimension for batches:
 
@@ -198,6 +206,225 @@ def scaled_dot_product_attention(
 
 ```
 
+## Multi-Head Attention
+
+<figure style="text-align: center;">
+  <img src="/assets/images/multi-head-attention-diagram.png" alt="Multi-Head Attention Diagram" style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Mlti-head attention</figcaption>
+</figure>
+
+Scaled dot-product attention gives us a powerful primitive: given a query, we compute a weighted average over a set of values based on their relevance. However, a single attention operation forces the model to express all relationships in one shared representation space. In practice, different types of relationships—such as syntactic structure, semantic similarity, or positional alignment—can interfere with one another when compressed into a single set of attention weights. Multi-head attention addresses this limitation by running several attention operations in parallel, each with its own learned projections of queries, keys, and values.
+
+Intuitively, each attention “head” can be thought of as looking at the sequence from a different perspective. One head might learn to attend to nearby words, another to long-range dependencies, and another to specific structural patterns like subject–verb agreement. Because each head operates on a lower-dimensional subspace, the model can represent diverse relationships simultaneously without forcing them into a single attention map. The outputs of these heads are then combined, allowing the model to integrate multiple views of the same sequence into a richer representation.
+
+Casually, multi-head attention is a fancy name for running several (smaller) attention instances in parallel.
+
+Formally, multi-head attention applies $h$ independent scaled dot-product attention operations. Given input matrices $Q \in \mathbb{R}^{T \times D}$, $K \in \mathbb{R}^{T \times D}$, and 
+$V \in \mathbb{R}^{T \times D}$, we first project them using learned linear transformations:
+
+$$
+Q_i = Q W_i^Q \in \mathbb{R}^{T \times H}, \quad
+K_i = K W_i^K \in \mathbb{R}^{T \times H}, \quad
+V_i = V W_i^V \in \mathbb{R}^{T \times H}
+$$
+
+Here, $H$ is the dimension of each head, often chosen as $H = D / h$ so that the total computational cost remains similar to that of single-head attention with dimension $D$.
+
+Each head computes scaled dot-product attention independently:
+
+$$\text{head}_i = \text{Attention}(Q W_i^Q,\; K W_i^K,\; V W_i^V)$$
+
+The resulting head outputs are concatenated and linearly transformed once more:
+
+$$
+ \text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)\, W^O 
+$$
+
+where $W^O \in \mathbb{R}^{(h \cdot H) \times D}$. 
+
+
+Back to the code. Let's extend scaled_dot_product_attention to accept a tensor with leading dimensions for batching and heads:
+
+(TODO: this code also introduces separate named dimension T_q and T_k for different sequence lengths. These are useful for computing cross-attention, when the queries come from a different sequence than the keys and values)
+
+```python
+def scaled_dot_product_attention(
+    Q: torch.Tensor,                     # (B, H, T_q, d_k)
+    K: torch.Tensor,                     # (B, H, T_k, d_k)
+    V: torch.Tensor,                     # (B, H, T_k, d_v)
+    mask: Optional[torch.Tensor] = None, # broadcastable to (B, H, T_q, T_k)
+    dropout_p: float = 0.0,
+    training: bool = True,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Compute scaled dot-product attention
+
+    Args:
+        Q: Queries of shape (B, H, T_q, d_k)
+        K: Keys    of shape (B, H, T_k, d_k)
+        V: Values  of shape (B, H, T_k, d_v)
+        mask: Optional attention mask, broadcastable to (B, H, T_q, T_k).
+              - If boolean: True means "keep/allow", False means "mask out".
+              - If floating: additive mask (e.g., 0 for keep, -inf for mask),
+                added to the attention scores before softmax.
+        dropout_p: Dropout probability applied to attention weights.
+        training:  If true, dropout is applied
+
+    Returns:
+        context: Weighted sum of values, shape (B, H, T_q, d_v)
+        attn:    Attention weights over keys, shape (B, H, T_q, T_k)
+    """
+    d_k = Q.size(-1)
+
+    # Scores: (B, H, T_q, T_k)
+    scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)
+
+    # Masking
+    if mask is not None:
+        if mask.dtype == torch.bool:
+            scores = scores.masked_fill(~mask, float("-inf"))
+        else:
+            scores = scores + mask
+
+    # Numerical stability: subtract per-row max so exp() doesn't overflow (softmax is shift-invariant).
+    scores = scores - scores.max(dim=-1, keepdim=True).values
+
+    # Attention weights: (B, H, T_q, T_k)
+    attn = F.softmax(scores, dim=-1)
+
+    # Optional dropout on attention weights
+    if dropout_p and dropout_p > 0.0:
+        attn = F.dropout(attn, p=dropout_p, training=training)
+
+    # Context: (B, H, T_q, d_v)
+    context = torch.matmul(attn, V)
+
+    return context, attn
+
+```
+
+```python
+class MultiHeadAttention(nn.Module):
+    """
+    Multi-head attention module.
+
+    Shapes:
+      - Input:  x_q: (B, T_q, d_model)
+                x_k: (B, T_k, d_model)  (defaults to x_q if not provided)
+                x_v: (B, T_k, d_model)  (defaults to x_k if not provided)
+      - Mask:   broadcastable to (B, H, T_q, T_k)
+      - Output: y:   (B, T_q, d_model)
+                attn:(B, H, T_q, T_k)
+
+    Notes:
+      - This is the "standard" Transformer MHA: per-head d_k = d_v = d_model / num_heads.
+      - For tutorial clarity, d_model must be divisible by num_heads.
+    """
+
+    def __init__(self, d_model: int, num_heads: int, dropout_p: float = 0.0, bias: bool = True):
+        """
+          Args:
+            d_model: Total embedding of the input and output tensors.
+            num_heads: Number of attention heads. d_model must be divisible by num_heads.
+            dropout_p: Dropout probability applied to the attention weights.
+            bias: If true, include additive bias terms in the linear projections.
+        """
+        super().__init__()
+        if d_model % num_heads != 0:
+            raise ValueError(f"d_model must be divisible by num_heads; got d_model={d_model}, num_heads={num_heads}")
+
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_head = d_model // num_heads
+        self.dropout_p = float(dropout_p)
+
+        # Q/K/V projections are implemented as single "packed" linear layers.
+        # Conceptually, each head h has its own projection W_h^Q, W_h^K, W_h^V
+        # with shape (d_model, d_head). In practice we concatenate the H per-head
+        # matrices along the output dimension to form one matrix:
+        #
+        #   W^Q = [W_1^Q | W_2^Q | ... | W_H^Q] ∈ R^{d_model × (H·d_head)} = R^{d_model × d_model}
+        #
+        # so applying nn.Linear(d_model, d_model) produces an output of shape
+        # (B, T, H·d_head), which we then reshape into (B, H, T, d_head) to recover
+        # the per-head queries/keys/values.
+        self.W_q = nn.Linear(d_model, d_model, bias=bias)
+        self.W_k = nn.Linear(d_model, d_model, bias=bias)
+        self.W_v = nn.Linear(d_model, d_model, bias=bias)
+
+        # Output projection that mixes information across heads.
+        # After attention, per-head outputs are concatenated back into
+        # a (B, T, d_model) tensor; this linear layer projects that
+        # concatenated representation back into the model space.
+        self.W_o = nn.Linear(d_model, d_model, bias=bias)
+
+    # TODO: initialize / reset parameters with Xavier initialization
+
+    def _split_heads(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Split the model dimension into multiple attention heads.
+
+        This reshapes and permutes a tensor from (B, T, d_model) into
+        (B, H, T, d_head), where d_head = d_model / H.
+        """
+        B, T, _ = x.shape
+        x = x.view(B, T, self.num_heads, self.d_head)
+        return x.transpose(1, 2)  # (B, H, T, d_head)
+
+    def _combine_heads(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Combine multiple attention heads back into the model dimension.
+
+        This permutes and reshapes a tensor from (B, H, T, d_head) into
+        (B, T, d_model) by concatenating the head dimensions.
+        """
+        B, H, T, d_head = x.shape
+        x = x.transpose(1, 2).contiguous()  # (B, T, H, d_head)
+        return x.view(B, T, H * d_head)
+
+    def forward(
+        self,
+        x_q: torch.Tensor,                        # (B, T_q, d_model)
+        x_k: Optional[torch.Tensor] = None,       # (B, T_k, d_model)
+        x_v: Optional[torch.Tensor] = None,       # (B, T_k, d_model)
+        mask: Optional[torch.Tensor] = None,      # broadcastable to (B, H, T_q, T_k)
+        return_attn: bool = False,
+    ) -> torch.Tensor | Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            x_q: Query input, shape (B, T_q, d_model)
+            x_k: Key input,   shape (B, T_k, d_model). Defaults to x_q (self-attention).
+            x_v: Value input, shape (B, T_k, d_model). Defaults to x_k.
+            mask: Optional mask broadcastable to (B, H, T_q, T_k).
+            return_attn: If True, also return attention weights (B, H, T_q, T_k).
+
+        Returns:
+            y: (B, T_q, d_model)
+            attn (optional): (B, H, T_q, T_k)
+        """
+        if x_k is None:
+            x_k = x_q
+        if x_v is None:
+            x_v = x_k
+
+        # Project to model dim, then split into heads.
+        Q = self._split_heads(self.W_q(x_q))  # (B, H, T_q, d_head)
+        K = self._split_heads(self.W_k(x_k))  # (B, H, T_k, d_head)
+        V = self._split_heads(self.W_v(x_v))  # (B, H, T_k, d_head)
+
+        # Attention per head.
+        context, attn = scaled_dot_product_attention(
+            Q, K, V, mask=mask, dropout_p=self.dropout_p, training=self.training
+        )  # context: (B, H, T_q, d_head)
+
+        # Recombine heads and project out.
+        y = self.W_o(self._combine_heads(context))  # (B, T_q, d_model)
+
+        if return_attn:
+            return y, attn
+        return y
+```
+
 ## Keys, Values, Queries?
 - Keys, Values, Queries aren't given, they're computed via projection matrices
 - Where did these matrics come from? They're learned jointly with the rest of the model
@@ -208,21 +435,226 @@ def scaled_dot_product_attention(
   <figcaption>Projection matrices and self-attention. [Image credit](https://newsletter.theaiedge.io/p/understanding-the-self-attention)</figcaption>
 </figure>
 
-## Multi-Head Attention
-
-<figure style="text-align: center;">
-  <img src="/assets/images/multi-head-attention-diagram.png" alt="Multi-Head Attention Diagram" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Mlti-head attention</figcaption>
-</figure>
-
 
 ## Encoder-Decoder
 
-## Input Embeddings
+<figure style="text-align: center;">
+  <img src="/assets/images/transformer-encoder-and-decoder-architectures.png" alt="Encoder-Decoder Architectures" style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Encoder-Decoder Architectures[Image credit]()</figcaption>
+</figure>
 
-## Training
 
-## Inference
+```python
+class EncoderBlock(nn.Module):
+    """
+    A standard Transformer encoder block (pre-norm), composed of:
+
+      1) Multi-head self-attention + residual
+      2) Position-wise feed-forward network + residual
+
+    This implementation uses "pre-norm" LayerNorm:
+      x -> LN -> sublayer -> dropout -> residual add
+
+    Shapes:
+      x:    (B, T, d_model)
+      mask: optional, broadcastable to (B, H, T, T) for self-attention
+
+    Returns:
+      y:    (B, T, d_model)
+      attn: (B, H, T, T) if return_attn=True
+    """
+
+    def __init__(
+        self,
+        d_model: int,
+        num_heads: int,
+        d_ff: int,
+        dropout_p: float = 0.0,
+        activation: str = "gelu",
+        bias: bool = True,
+    ):
+        """
+        Initialize an encoder block.
+
+        Args:
+            d_model: Model/embedding dimension.
+            num_heads: Number of attention heads.
+            d_ff: Hidden dimension of the feed-forward network (FFN).
+            dropout_p: Dropout probability applied after attention/FFN outputs.
+            activation: Activation function in the FFN ("gelu" or "relu").
+            bias: Whether to include bias terms in linear layers.
+        """
+        super().__init__()
+        self.dropout_p = float(dropout_p)
+
+        self.self_attn = MultiHeadAttention(d_model=d_model, num_heads=num_heads, dropout_p=dropout_p, bias=bias)
+
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ff, bias=bias),
+            nn.GELU() if activation.lower() == "gelu" else nn.ReLU(),
+            nn.Linear(d_ff, d_model, bias=bias),
+        )
+
+        self.dropout = nn.Dropout(p=dropout_p)
+
+    def forward(
+        self,
+        x: torch.Tensor,                    # (B, T, d_model)
+        mask: Optional[torch.Tensor] = None, # broadcastable to (B, H, T, T)
+        return_attn: bool = False,
+    ) -> torch.Tensor | Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            x: Input sequence embeddings, shape (B, T, d_model).
+            mask: Optional attention mask broadcastable to (B, H, T, T).
+            return_attn: If True, also return attention weights.
+
+        Returns:
+            y: Updated embeddings, shape (B, T, d_model).
+            attn (optional): Attention weights, shape (B, H, T, T).
+        """
+        # ---- Self-attention sublayer (pre-norm) ----
+        x_norm = self.norm1(x)
+        if return_attn:
+            attn_out, attn = self.self_attn(x_q=x_norm, x_kv=None, mask=mask, return_attn=True)
+        else:
+            attn_out = self.self_attn(x_q=x_norm, x_kv=None, mask=mask, return_attn=False)
+
+        x = x + self.dropout(attn_out)
+
+        # ---- Feed-forward sublayer (pre-norm) ----
+        x_norm = self.norm2(x)
+        ffn_out = self.ffn(x_norm)
+        x = x + self.dropout(ffn_out)
+
+        return (x, attn) if return_attn else x
+```
+
+Explain pre-norm vs pot-norm:
+
+The original Transformer paper, Attention Is All You Need, used the post-norm formulation, where LayerNorm is applied after each residual addition. This worked well for the relatively shallow models studied at the time (e.g., 6 encoder layers), but later work found that post-norm Transformers become increasingly difficult to train as depth grows, often requiring careful learning-rate warmup and tuning to remain stable. As a result, most modern implementations adopt the pre-norm variant, which applies LayerNorm before each sublayer. Pre-norm preserves an exact identity path through the residual connections, greatly improving gradient flow and making deep Transformers significantly more stable and easier to optimize, which is why it is now the default choice in practice.
+
+```python
+from __future__ import annotations
+
+from typing import Optional, Tuple
+import torch
+import torch.nn as nn
+
+
+class DecoderBlock(nn.Module):
+    """
+    A standard Transformer decoder block (pre-norm), composed of:
+
+      1) Masked multi-head self-attention + residual
+      2) Cross-attention over encoder outputs + residual
+      3) Position-wise feed-forward network + residual
+
+    This implementation uses "pre-norm" LayerNorm:
+      x -> LN -> sublayer -> dropout -> residual add
+
+    Shapes:
+      x:        (B, T, d_model)          decoder hidden states
+      enc_out:  (B, S, d_model)          encoder outputs (source length S)
+      self_mask:  optional, broadcastable to (B, H, T, T)   (typically causal and/or padding)
+      cross_mask: optional, broadcastable to (B, H, T, S)   (typically padding over source keys)
+
+    Returns:
+      y:        (B, T, d_model)
+      attn_self:  (B, H, T, T) if return_attn=True
+      attn_cross: (B, H, T, S) if return_attn=True
+    """
+
+    def __init__(
+        self,
+        d_model: int,
+        num_heads: int,
+        d_ff: int,
+        dropout_p: float = 0.0,
+        activation: str = "gelu",
+        bias: bool = True,
+    ):
+        """
+        Initialize a decoder block.
+
+        Args:
+            d_model: Model/embedding dimension.
+            num_heads: Number of attention heads.
+            d_ff: Hidden dimension of the feed-forward network (FFN).
+            dropout_p: Dropout probability applied after attention/FFN outputs.
+            activation: Activation function in the FFN ("gelu" or "relu").
+            bias: Whether to include bias terms in linear layers.
+        """
+        super().__init__()
+        self.dropout_p = float(dropout_p)
+
+        self.self_attn = MultiHeadAttention(d_model=d_model, num_heads=num_heads, dropout_p=dropout_p, bias=bias)
+        self.cross_attn = MultiHeadAttention(d_model=d_model, num_heads=num_heads, dropout_p=dropout_p, bias=bias)
+
+        self.norm1 = nn.LayerNorm(d_model)  # before self-attn
+        self.norm2 = nn.LayerNorm(d_model)  # before cross-attn
+        self.norm3 = nn.LayerNorm(d_model)  # before FFN
+
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ff, bias=bias),
+            nn.GELU() if activation.lower() == "gelu" else nn.ReLU(),
+            nn.Linear(d_ff, d_model, bias=bias),
+        )
+
+        self.dropout = nn.Dropout(p=dropout_p)
+
+    def forward(
+        self,
+        x: torch.Tensor,                          # (B, T, d_model)
+        enc_out: torch.Tensor,                    # (B, S, d_model)
+        self_mask: Optional[torch.Tensor] = None, # broadcastable to (B, H, T, T)
+        cross_mask: Optional[torch.Tensor] = None,# broadcastable to (B, H, T, S)
+        return_attn: bool = False,
+    ) -> torch.Tensor | Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            x: Decoder input (hidden states), shape (B, T, d_model).
+            enc_out: Encoder outputs to attend over, shape (B, S, d_model).
+            self_mask: Optional mask for decoder self-attention, broadcastable to (B, H, T, T).
+            cross_mask: Optional mask for cross-attention, broadcastable to (B, H, T, S).
+            return_attn: If True, also return (self_attn_weights, cross_attn_weights).
+
+        Returns:
+            y: Updated decoder states, shape (B, T, d_model).
+            attn_self (optional): (B, H, T, T)
+            attn_cross (optional): (B, H, T, S)
+        """
+        # ---- Masked self-attention (pre-norm) ----
+        x_norm = self.norm1(x)
+        if return_attn:
+            self_out, attn_self = self.self_attn(x_q=x_norm, x_kv=None, mask=self_mask, return_attn=True)
+        else:
+            self_out = self.self_attn(x_q=x_norm, x_kv=None, mask=self_mask, return_attn=False)
+        x = x + self.dropout(self_out)
+
+        # ---- Cross-attention (pre-norm): queries from decoder, keys/values from encoder ----
+        x_norm = self.norm2(x)
+        if return_attn:
+            cross_out, attn_cross = self.cross_attn(x_q=x_norm, x_kv=enc_out, mask=cross_mask, return_attn=True)
+        else:
+            cross_out = self.cross_attn(x_q=x_norm, x_kv=enc_out, mask=cross_mask, return_attn=False)
+        x = x + self.dropout(cross_out)
+
+        # ---- Feed-forward (pre-norm) ----
+        x_norm = self.norm3(x)
+        ffn_out = self.ffn(x_norm)
+        x = x + self.dropout(ffn_out)
+
+        if return_attn:
+            return x, attn_self, attn_cross
+        return x
+```
+
+## Detailed Recap
+Revisit the diagram at the start of the post in more detail. This could show the dimensions of matrices, einsums, etc.
 
 # References and Further Reading
 
