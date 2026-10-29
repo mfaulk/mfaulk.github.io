@@ -9,7 +9,7 @@ This post is a detailed look at the original Transformer. We'll working through 
  
 # The Transformer
 
-In less than a decade, transformers have become the dominant architecture in modern machine learning. (TODO: transformers and attention underpin most things in the AI space, including text embeddings and generative LLMs) Introduced by Vaswani et al. in the 2017 paper *Attention Is All You Need*, the transformer architecture replaced recurrence and convolution with a single mechanism: attention. Earlier sequence models like RNNs and LSTMs compressed all prior information into a fixed-length hidden state, forcing the network to distill an entire sequence into a single vector. In contrast, the transformer allows each token to directly "attend to" all others, producing a representation of the token that incorporates context from the most relevant parts of the entire input.
+In less than a decade, transformers have become the dominant architecture in modern machine learning, spanning text embedding models for search and retrieval, large language models for generation, and models for images, audio, and protein structure. Introduced by Vaswani et al. in the 2017 paper *Attention Is All You Need*, the transformer architecture replaced recurrence and convolution with a single mechanism: attention. Earlier sequence models like RNNs and LSTMs compressed all prior information into a fixed-length hidden state, forcing the network to distill an entire sequence into a single vector. In contrast, the transformer computes a representation of each position in the sequence by letting it directly "attend to" every other position, drawing in context from the parts of the input most relevant to it.
 
 This section steps through the definition and implementation of each part of the diagram:
 
@@ -40,23 +40,24 @@ from typing import Optional, Tuple
 import math
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
 ```
 
 ### If Attention is All You Need, What *Don't* You Need? Recurrence.
 
-"We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely"
+*"We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely"*
 
-Before transformers, most sequence-to-sequence models relied on recurrent neural networks (RNNs) and their more sophisticated variants like LSTMs and GRUs (TODO: links?). These architectures process sequences one element at a time, updating a hidden state as each new token arrives. This design gives RNNs a natural sense of order but also serious limitations: long-range dependencies are difficult to capture, gradients tend to vanish over many time steps, and the inherently sequential nature of recurrence makes training slow and difficult to parallelize.
+Before transformers, most sequence-to-sequence models relied on [recurrent neural networks](https://doi.org/10.1207/s15516709cog1402_1) (RNNs) and their more sophisticated variants like [Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) (LSTM) and [Gated Recurrent Units](https://arxiv.org/abs/1406.1078) (GRUs). These architectures process sequences one element at a time, updating a hidden state as each new element arrives. This design gives RNNs a natural sense of order but also serious limitations: long-range dependencies are difficult to capture, gradients tend to vanish over many time steps, and the inherently sequential nature of recurrence makes training slow and difficult to parallelize.
 
 <figure style="text-align: center;">
   <img src="/assets/images/seq-to-seq-encoder-decoder.png" alt="Encoder-Decoder" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>An encoder-decoder architecture with fixed-length context vector (encoding). Image credit: ???</figcaption>
+  <figcaption>An encoder-decoder architecture with fixed-length context vector (encoding). <a href="https://lilianweng.github.io/posts/2018-06-24-attention/">Image credit</a>: Lilian Weng, "Attention? Attention!"</figcaption>
 </figure>
 
 
-A specific example: The sequence-to-sequence model introduced by Sutskever et al. (2014) extended RNNs into an encoder-decoder framework, where the encoder compressed the entire input sequence into a single fixed-length context vector, and the decoder generated the output sequence from it. This worked well for short sentences, but as the sequences grow longer, that single vector becomes a bottleneck, forcing the network to represent all relevant information in a narrow space. Transformers break from this paradigm. Instead of a fixed-length context vector, transformers process all tokens simultaneously and model the relationships between each pair of tokens using a mechanism called *attention*.
+A specific example: The [sequence-to-sequence model](https://arxiv.org/abs/1409.3215) introduced by Sutskever et al. (2014) extended RNNs into an encoder-decoder framework, where the encoder compressed the entire input sequence into a single fixed-length context vector, and the decoder generated the output sequence from it. This worked well for short sentences, but as the sequences grow longer, that single vector becomes a bottleneck, forcing the network to represent all relevant information in a narrow space. Transformers break from this paradigm. Instead of a fixed-length context vector, transformers process all elements of the sequence simultaneously and model the relationships between each pair of them using a mechanism called *attention*.
 
 ## Attention
 
@@ -64,7 +65,7 @@ Attention allows a model to dynamically focus on the most relevant parts of its 
 
 <figure style="text-align: center;">
   <img src="/assets/images/attention-weighted-edges.png" alt="Attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Attention models the relevance of a query to each element of a sequence. Image credit: ???</figcaption>
+  <figcaption>Attention models the relevance of a query to each element of a sequence. Image credit: unknown (TODO: identify source or redraw)</figcaption>
 </figure>
 
 
@@ -74,7 +75,7 @@ At its core, *attention is a method for computing a weighted average over a set 
 
 <figure style="text-align: center;">
   <img src="/assets/images/dot-product-attention.png" alt="Dot product attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Dot product attention. Image credit: ???</figcaption>
+  <figcaption>Dot product attention. Image credit: unknown (TODO: identify source or redraw)</figcaption>
 </figure>
 
 ## Scaled Dot Product Attention
@@ -102,7 +103,7 @@ and its gradients are
 
 <figure style="text-align: center;">
   <img src="/assets/images/softmax-gradients.png" alt="Softmax gradients" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Gradients of the softmax function. Image credit: ???</figcaption>
+  <figcaption>Gradients of the softmax function. <a href="https://medium.com/data-science/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1">Image credit</a>: Thomas Kurbiel, "Derivative of the Softmax Function and the Categorical Cross-Entropy Loss"</figcaption>
 </figure>
 
 When softmax saturates, a single $s_i$ value approaches 1, and the others approach $0$, and the gradients all vanish. Dividing by $\sqrt(d_k)$ counteracts this effect by keeping the variance of the dot products roughly constant, ensuring that attention weights remain well-scaled and that the model can learn effectively across different embedding dimensions.
@@ -143,17 +144,18 @@ def scaled_dot_product_attention(
 ## Self-Attention
 So far, our attention mechanism takes a sequence of elements (i.e., keys and values) and a query, and returns a single value. We can extend this mechanism by associating a query with each element, so we can compute how much each element "attends" to every other element:
 
-<figure style="text-align: center;">
-  <img src="/assets/images/scaled-dot-product-attention-equation.png" alt="Scaled dot product attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Scaled dot product attention. Image credit: ???</figcaption>
-</figure>
+$$
+\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+$$
+
+The matrix multiplication $QK^T$ performs the dot product for every possible pair of queries and keys, resulting in a matrix of shape $T \times T$.
 
 In the special case where the queries, keys, and values all come from the same sequence, we call this *self-attention*. 
-Self-attention allows every element in a sequence to attend to every other element, including itself. This means that each token’s representation is updated based on a weighted combination of all tokens in the sequence, where the weights reflect their relevance to that token.
+Self-attention allows every element in a sequence to attend to every other element, including itself. This means that each element’s representation is updated based on a weighted combination of all elements in the sequence, where the weights reflect their relevance to that element.
 
 <figure style="text-align: center;">
   <img src="/assets/images/attention-weights-small.png" alt="Attention weights" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Self-attention weights for each pair of positions. Image credit: ???</figcaption>
+  <figcaption>Self-attention weights for each pair of positions. Image credit: unknown (TODO: identify source or redraw)</figcaption>
 </figure>
 
 Let's update the implementation of scaled_dot_product_attention to compute attention for multiple queries, and allow for an optional dimension for batches:
@@ -210,7 +212,7 @@ def scaled_dot_product_attention(
 
 <figure style="text-align: center;">
   <img src="/assets/images/multi-head-attention-diagram.png" alt="Multi-Head Attention Diagram" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Mlti-head attention</figcaption>
+  <figcaption>Multi-head attention</figcaption>
 </figure>
 
 Scaled dot-product attention gives us a powerful primitive: given a query, we compute a weighted average over a set of values based on their relevance. However, a single attention operation forces the model to express all relationships in one shared representation space. In practice, different types of relationships—such as syntactic structure, semantic similarity, or positional alignment—can interfere with one another when compressed into a single set of attention weights. Multi-head attention addresses this limitation by running several attention operations in parallel, each with its own learned projections of queries, keys, and values.
@@ -245,7 +247,7 @@ where $W^O \in \mathbb{R}^{(h \cdot H) \times D}$.
 
 Back to the code. Let's extend scaled_dot_product_attention to accept a tensor with leading dimensions for batching and heads:
 
-(TODO: this code also introduces separate named dimension T_q and T_k for different sequence lengths. These are useful for computing cross-attention, when the queries come from a different sequence than the keys and values)
+Note the two sequence lengths in the signature. Self-attention draws queries, keys, and values from the same sequence, so `T_q == T_k`; cross-attention draws the queries from a different sequence, so the two can differ. Writing them separately keeps the decoder's cross-attention working without a second implementation.
 
 ```python
 def scaled_dot_product_attention(
@@ -358,7 +360,23 @@ class MultiHeadAttention(nn.Module):
         # concatenated representation back into the model space.
         self.W_o = nn.Linear(d_model, d_model, bias=bias)
 
-    # TODO: initialize / reset parameters with Xavier initialization
+        self._reset_parameters()
+
+    def _reset_parameters(self) -> None:
+        """
+        Xavier (Glorot) uniform initialization for the four projections.
+
+        nn.Linear defaults to Kaiming-uniform, which is scaled for ReLU-style
+        activations. The attention projections have no activation, so Xavier's
+        fan_in/fan_out scaling is the better match: it keeps the variance of
+        the activations roughly constant across the projection, which in turn
+        keeps the pre-softmax scores in a range where the softmax gradient has
+        not yet saturated.
+        """
+        for proj in (self.W_q, self.W_k, self.W_v, self.W_o):
+            nn.init.xavier_uniform_(proj.weight)
+            if proj.bias is not None:
+                nn.init.zeros_(proj.bias)
 
     def _split_heads(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -427,8 +445,16 @@ class MultiHeadAttention(nn.Module):
 
 ## Keys, Values, Queries?
 - Keys, Values, Queries aren't given, they're computed via projection matrices
-- Where did these matrics come from? They're learned jointly with the rest of the model
+- Where did these matrices come from? They're learned jointly with the rest of the model
 - Meta-lesson: the architecture can assume that functions exist, and then learn them into existence
+
+So far we have talked about queries, keys, and values as though they were given — each element arriving with a key describing what it is about and a value carrying its content. Look at what `forward` actually receives: a single tensor `x_q` of shape `(B, T, d_model)`, and in the self-attention case that one tensor supplies the keys and values too. Keys, values, and queries aren't given. They're computed, via the projection matrices `self.W_q`, `self.W_k`, and `self.W_v`.
+
+The three projections map the same input into three different subspaces, so a single element representation can act as a query when asking what it needs from the sequence, a key when advertising what it offers, and a value when delivering its content. The separation also makes the relationship directional: with one projection producing both queries and keys, $QK^T$ would be symmetric, and "the verb attends to its subject" would carry exactly the same weight as "the subject attends to its verb."
+
+Where did these matrices come from? They're learned jointly with the rest of the model. `W_q`, `W_k`, and `W_v` are `nn.Linear` layers like any other. The training objective says nothing about what makes a good key or a good query; the only signal is the loss at the output, and the projections arrive at whatever notion of relevance reduces it.
+
+Meta-lesson: Attention assumes that a useful notion of relevance exists, then learns it into existence.
 
 <figure style="text-align: center;">
   <img src="/assets/images/projections-and-attention.png" alt="Projection matrices, self-attention" style="max-width: 100%; height: auto; margin: auto;">
@@ -663,5 +689,10 @@ Revisit the diagram at the start of the post in more detail. This could show the
 1. [Efficient Transformers: A Survey](https://arxiv.org/abs/2009.06732)
 1. [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)
 1. [Effective Approaches to Attention-based Neural Machine Translation](https://arxiv.org/abs/1508.04025)
+1. [Finding Structure in Time](https://doi.org/10.1207/s15516709cog1402_1) (Elman, 1990 — introduces the simple recurrent network)
+1. [Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) (Hochreiter & Schmidhuber, 1997)
+1. [Learning Phrase Representations using RNN Encoder-Decoder for Statistical Machine Translation](https://arxiv.org/abs/1406.1078) (Cho et al., 2014 — introduces the GRU)
+1. [Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling](https://arxiv.org/abs/1412.3555) (Chung et al., 2014 — LSTM vs. GRU comparison)
+1. [Sequence to Sequence Learning with Neural Networks](https://arxiv.org/abs/1409.3215) (Sutskever et al., 2014)
 1. [Derivative of the Softmax Function and the Categorical Cross-Entropy Loss](https://medium.com/data-science/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1)
 	
