@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 708 292" width="708" height="292" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="A single query is compared against the key of each word in I am eating an apple, producing weights alpha. The output is the sum of the value vectors scaled by those weights, dominated by eating and apple.">
+<title>Dot-product attention for a single query</title>
+<defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1F5CA8"/></marker></defs>
+<path d="M 336.0 62 L 86.0 110" stroke="#1F5CA8" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)" opacity="0.75"/>
+<path d="M 336.0 62 L 190.0 110" stroke="#1F5CA8" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)" opacity="0.75"/>
+<path d="M 336.0 62 L 294.0 110" stroke="#1F5CA8" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)" opacity="0.75"/>
+<path d="M 336.0 62 L 398.0 110" stroke="#1F5CA8" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)" opacity="0.75"/>
+<path d="M 336.0 62 L 502.0 110" stroke="#1F5CA8" stroke-width="1.2" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)" opacity="0.75"/>
+<rect x="326.0" y="18" width="20" height="11" fill="#1F5CA8" fill-opacity="0.95"/>
+<rect x="326.0" y="29" width="20" height="11" fill="#1F5CA8" fill-opacity="0.45"/>
+<rect x="326.0" y="40" width="20" height="11" fill="#1F5CA8" fill-opacity="0.75"/>
+<rect x="326.0" y="51" width="20" height="11" fill="#1F5CA8" fill-opacity="0.25"/>
+<rect x="326.0" y="18" width="20" height="44" fill="none" stroke="#1F5CA8" stroke-width="1.2"/>
+<text x="356.0" y="46" font-size="14" fill="currentColor" opacity="0.85">query</text>
+<text x="58" y="144" text-anchor="end" font-size="14" fill="currentColor" opacity="0.85">keys</text>
+<text x="58" y="236" text-anchor="end" font-size="14" fill="currentColor" opacity="0.85">values</text>
+<rect x="76" y="116" width="20" height="11" fill="#B4531A" fill-opacity="0.35"/>
+<rect x="76" y="127" width="20" height="11" fill="#B4531A" fill-opacity="0.85"/>
+<rect x="76" y="138" width="20" height="11" fill="#B4531A" fill-opacity="0.30"/>
+<rect x="76" y="149" width="20" height="11" fill="#B4531A" fill-opacity="0.60"/>
+<rect x="76" y="116" width="20" height="44" fill="none" stroke="#B4531A" stroke-width="1.2"/>
+<rect x="76" y="208" width="20" height="11" fill="#2F7A4F" fill-opacity="0.70"/>
+<rect x="76" y="219" width="20" height="11" fill="#2F7A4F" fill-opacity="0.30"/>
+<rect x="76" y="230" width="20" height="11" fill="#2F7A4F" fill-opacity="0.90"/>
+<rect x="76" y="241" width="20" height="11" fill="#2F7A4F" fill-opacity="0.45"/>
+<rect x="76" y="208" width="20" height="44" fill="none" stroke="#2F7A4F" stroke-width="1.2"/>
+<text x="86.0" y="182" text-anchor="middle" font-size="14" fill="#B4531A">&#945;<tspan font-size="10" dy="3">1</tspan><tspan font-size="14" dy="-3"> = 0.05</tspan></text>
+<text x="103" y="236" font-size="13" fill="currentColor" opacity="0.75">&#215;&#945;<tspan font-size="10" dy="3">1</tspan></text>
+<text x="166" y="236" font-size="15" fill="currentColor" opacity="0.6">+</text>
+<text x="86.0" y="276" text-anchor="middle" font-size="15" fill="#1a2a3a">I</text>
+<rect x="180" y="116" width="20" height="11" fill="#B4531A" fill-opacity="0.70"/>
+<rect x="180" y="127" width="20" height="11" fill="#B4531A" fill-opacity="0.30"/>
+<rect x="180" y="138" width="20" height="11" fill="#B4531A" fill-opacity="0.90"/>
+<rect x="180" y="149" width="20" height="11" fill="#B4531A" fill-opacity="0.45"/>
+<rect x="180" y="116" width="20" height="44" fill="none" stroke="#B4531A" stroke-width="1.2"/>
+<rect x="180" y="208" width="20" height="11" fill="#2F7A4F" fill-opacity="0.25"/>
+<rect x="180" y="219" width="20" height="11" fill="#2F7A4F" fill-opacity="0.65"/>
+<rect x="180" y="230" width="20" height="11" fill="#2F7A4F" fill-opacity="0.40"/>
+<rect x="180" y="241" width="20" height="11" fill="#2F7A4F" fill-opacity="0.85"/>
+<rect x="180" y="208" width="20" height="44" fill="none" stroke="#2F7A4F" stroke-width="1.2"/>
+<text x="190.0" y="182" text-anchor="middle" font-size="14" fill="#B4531A">&#945;<tspan font-size="10" dy="3">2</tspan><tspan font-size="14" dy="-3"> = 0.08</tspan></text>
+<text x="207" y="236" font-size="13" fill="currentColor" opacity="0.75">&#215;&#945;<tspan font-size="10" dy="3">2</tspan></text>
+<text x="270" y="236" font-size="15" fill="currentColor" opacity="0.6">+</text>
+<text x="190.0" y="276" text-anchor="middle" font-size="15" fill="#1a2a3a">am</text>
+<rect x="284" y="116" width="20" height="11" fill="#B4531A" fill-opacity="0.25"/>
+<rect x="284" y="127" width="20" height="11" fill="#B4531A" fill-opacity="0.65"/>
+<rect x="284" y="138" width="20" height="11" fill="#B4531A" fill-opacity="0.40"/>
+<rect x="284" y="149" width="20" height="11" fill="#B4531A" fill-opacity="0.85"/>
+<rect x="284" y="116" width="20" height="44" fill="none" stroke="#B4531A" stroke-width="1.2"/>
+<rect x="284" y="208" width="20" height="11" fill="#2F7A4F" fill-opacity="0.80"/>
+<rect x="284" y="219" width="20" height="11" fill="#2F7A4F" fill-opacity="0.50"/>
+<rect x="284" y="230" width="20" height="11" fill="#2F7A4F" fill-opacity="0.25"/>
+<rect x="284" y="241" width="20" height="11" fill="#2F7A4F" fill-opacity="0.70"/>
+<rect x="284" y="208" width="20" height="44" fill="none" stroke="#2F7A4F" stroke-width="1.2"/>
+<text x="294.0" y="182" text-anchor="middle" font-size="14" fill="#B4531A">&#945;<tspan font-size="10" dy="3">3</tspan><tspan font-size="14" dy="-3"> = 0.46</tspan></text>
+<text x="311" y="236" font-size="13" fill="currentColor" opacity="0.75">&#215;&#945;<tspan font-size="10" dy="3">3</tspan></text>
+<text x="374" y="236" font-size="15" fill="currentColor" opacity="0.6">+</text>
+<text x="294.0" y="276" text-anchor="middle" font-size="15" fill="#1a2a3a">eating</text>
+<rect x="388" y="116" width="20" height="11" fill="#B4531A" fill-opacity="0.80"/>
+<rect x="388" y="127" width="20" height="11" fill="#B4531A" fill-opacity="0.50"/>
+<rect x="388" y="138" width="20" height="11" fill="#B4531A" fill-opacity="0.25"/>
+<rect x="388" y="149" width="20" height="11" fill="#B4531A" fill-opacity="0.70"/>
+<rect x="388" y="116" width="20" height="44" fill="none" stroke="#B4531A" stroke-width="1.2"/>
+<rect x="388" y="208" width="20" height="11" fill="#2F7A4F" fill-opacity="0.55"/>
+<rect x="388" y="219" width="20" height="11" fill="#2F7A4F" fill-opacity="0.75"/>
+<rect x="388" y="230" width="20" height="11" fill="#2F7A4F" fill-opacity="0.60"/>
+<rect x="388" y="241" width="20" height="11" fill="#2F7A4F" fill-opacity="0.35"/>
+<rect x="388" y="208" width="20" height="44" fill="none" stroke="#2F7A4F" stroke-width="1.2"/>
+<text x="398.0" y="182" text-anchor="middle" font-size="14" fill="#B4531A">&#945;<tspan font-size="10" dy="3">4</tspan><tspan font-size="14" dy="-3"> = 0.07</tspan></text>
+<text x="415" y="236" font-size="13" fill="currentColor" opacity="0.75">&#215;&#945;<tspan font-size="10" dy="3">4</tspan></text>
+<text x="478" y="236" font-size="15" fill="currentColor" opacity="0.6">+</text>
+<text x="398.0" y="276" text-anchor="middle" font-size="15" fill="#1a2a3a">an</text>
+<rect x="492" y="116" width="20" height="11" fill="#B4531A" fill-opacity="0.55"/>
+<rect x="492" y="127" width="20" height="11" fill="#B4531A" fill-opacity="0.75"/>
+<rect x="492" y="138" width="20" height="11" fill="#B4531A" fill-opacity="0.60"/>
+<rect x="492" y="149" width="20" height="11" fill="#B4531A" fill-opacity="0.35"/>
+<rect x="492" y="116" width="20" height="44" fill="none" stroke="#B4531A" stroke-width="1.2"/>
+<rect x="492" y="208" width="20" height="11" fill="#2F7A4F" fill-opacity="0.95"/>
+<rect x="492" y="219" width="20" height="11" fill="#2F7A4F" fill-opacity="0.45"/>
+<rect x="492" y="230" width="20" height="11" fill="#2F7A4F" fill-opacity="0.75"/>
+<rect x="492" y="241" width="20" height="11" fill="#2F7A4F" fill-opacity="0.25"/>
+<rect x="492" y="208" width="20" height="44" fill="none" stroke="#2F7A4F" stroke-width="1.2"/>
+<text x="502.0" y="182" text-anchor="middle" font-size="14" fill="#B4531A">&#945;<tspan font-size="10" dy="3">5</tspan><tspan font-size="14" dy="-3"> = 0.34</tspan></text>
+<text x="519" y="236" font-size="13" fill="currentColor" opacity="0.75">&#215;&#945;<tspan font-size="10" dy="3">5</tspan></text>
+<text x="502.0" y="276" text-anchor="middle" font-size="15" fill="#1a2a3a">apple</text>
+<text x="590" y="236" font-size="16" fill="currentColor" opacity="0.7">=</text>
+<rect x="616" y="208" width="20" height="11" fill="#55606b" fill-opacity="0.25"/>
+<rect x="616" y="219" width="20" height="11" fill="#55606b" fill-opacity="0.65"/>
+<rect x="616" y="230" width="20" height="11" fill="#55606b" fill-opacity="0.40"/>
+<rect x="616" y="241" width="20" height="11" fill="#55606b" fill-opacity="0.85"/>
+<rect x="616" y="208" width="20" height="44" fill="none" stroke="#55606b" stroke-width="1.2"/>
+<text x="644" y="236" font-size="14" fill="currentColor" opacity="0.85">output</text>
+</svg>

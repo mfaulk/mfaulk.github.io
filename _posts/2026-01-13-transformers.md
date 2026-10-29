@@ -78,8 +78,8 @@ Attention was first introduced in the context of neural machine translation as a
 At its core, *attention is a method for computing a weighted average over a set of elements*, where the weights are determined dynamically based on the relationship between an input query and each element’s representation. Each element in the sequence is represented by a key and a value—the key describing what the element is about, and the value carrying the actual content we might want to retrieve. The query is another vector in the same feature space, representing what we’re looking for. The attention mechanism measures how relevant each key is to the query, typically using a similarity function such as a dot product. Elements whose keys are most similar to the query receive higher weights, meaning the model “attends” to them more strongly.
 
 <figure style="text-align: center;">
-  <img src="/assets/images/dot-product-attention.png" alt="Dot product attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Dot product attention. <a href="https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial6/Transformers_and_MHAttention.html">Image credit</a>: Phillip Lippe, UvA Deep Learning Tutorials, "Tutorial 6: Transformers and Multi-Head Attention"</figcaption>
+  <img src="/assets/images/dot-product-attention.svg" alt="A query vector is compared against the key of each word in I am eating an apple, producing weights alpha one through alpha five. The output is the sum of the value vectors scaled by those weights, dominated by eating and apple." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Dot product attention. The query is compared against every key to produce the weights &alpha;<sub>i</sub>, and the output is the sum of the values scaled by those weights. Here <em>eating</em> and <em>apple</em> account for most of it.</figcaption>
 </figure>
 
 ## Scaled Dot Product Attention
@@ -1177,6 +1177,7 @@ The one arrow that is easy to lose track of is the long one from the top of the 
 1. [Attention is All You Need](https://arxiv.org/abs/1706.03762)
 1. [The Annotated Transformer](https://nlp.seas.harvard.edu/annotated-transformer/)
 1. [Attention? Attention!](https://lilianweng.github.io/posts/2018-06-24-attention/) (Lilian Weng, 2018)
+1. [UvA Deep Learning Tutorials: Transformers and Multi-Head Attention](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial6/Transformers_and_MHAttention.html) (Phillip Lippe)
 1. [Efficient Transformers: A Survey](https://arxiv.org/abs/2009.06732)
 1. [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)
 1. [Effective Approaches to Attention-based Neural Machine Translation](https://arxiv.org/abs/1508.04025)
