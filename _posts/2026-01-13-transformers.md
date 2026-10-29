@@ -592,6 +592,41 @@ The three masks in the encoder-decoder blocks below follow from this. The encode
 
 Caveat: If a query row is masked out entirely, every score in that row is $-\infty$, and the softmax over them is $0/0$. The result is `NaN`, which then spreads through the rest of the network. This happens when a padding mask is applied along the query axis as well as the key axis, so that padded *queries* have nothing left to attend to. The usual fix is to leave the query axis unmasked, as `padding_mask` above does, and drop the padded positions later when computing the loss.
 
+## Layer Normalization and Dropout
+
+Layer normalization and dropout appear throughout the blocks below without being part of the attention computation. Neither changes what a block can represent; both are there to make deep stacks of blocks trainable.
+
+### Layer Normalization
+
+Layer normalization standardizes each position's feature vector on its own. For the representation $x \in \mathbb{R}^{d_{\text{model}}}$ at a single position,
+
+$$
+\mu = \frac{1}{d_{\text{model}}}\sum_{i=1}^{d_{\text{model}}} x_i, \qquad
+\sigma^2 = \frac{1}{d_{\text{model}}}\sum_{i=1}^{d_{\text{model}}} (x_i - \mu)^2
+$$
+
+$$
+\text{LayerNorm}(x) = \gamma \odot \frac{x - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta
+$$
+
+where $\gamma$ and $\beta$ are learned vectors of length $d_{\text{model}}$, initialized to ones and zeros, and $\epsilon$ is a small constant guarding the division. Applied to a tensor of shape `(B, T, d_model)`, `nn.LayerNorm(d_model)` reduces over the last axis only, so it performs $B \times T$ independent normalizations — one per position of each sequence.
+
+Compare batch normalization, which standardizes each feature across the examples in a batch. That makes an example's output depend on whatever else it was batched with. For sequences that is awkward: a batch holds sequences of different lengths, so the statistics are computed over a mixture of real content and padding, and they shift with batch size. Batch norm also has to keep running averages to behave sensibly at inference, where there may be no batch to compute statistics over. Layer norm has none of these problems. It looks at one position at a time, so it behaves identically for a batch of 256 and a batch of 1, and identically in training and evaluation.
+
+Where to put the normalization is a separate choice: before each sublayer, or after the residual addition. We come back to it after the encoder block below.
+
+### Dropout
+
+Dropout zeroes each element of a tensor independently with probability $p$ during training, and scales the survivors by $1/(1-p)$ so that the expected value is unchanged. At evaluation time it is the identity. The transformer applies it in three places, all of which appear in the code in this post:
+
+- **On the sum of the embeddings and the positional encoding**, at the bottom of each stack. This is the `dropout_p` argument to `PositionalEncoding` above.
+- **On each sublayer's output, before the residual addition** — `x = x + self.dropout(attn_out)` in the blocks below. The residual path itself is never dropped, so there is always a clean route for the gradient.
+- **On the attention weights**, inside `scaled_dot_product_attention`. This severs individual query-key connections at random, so a query cannot come to depend on any single key. It also leaves the attention rows no longer summing to one.
+
+The first two are what Vaswani et al. describe; dropout on the attention weights comes from the reference implementations and is now standard. The base model in the paper used $p = 0.1$ in all of them.
+
+Because dropout behaves differently in training and evaluation, it matters that the blocks hold `nn.Dropout` modules rather than calling `F.dropout` directly. `model.eval()` switches a module off automatically, while the functional form needs its `training` flag supplied by the caller — which is why `scaled_dot_product_attention` takes one and `MultiHeadAttention` passes `training=self.training` down to it.
+
 ## Encoder-Decoder
 
 <figure style="text-align: center;">
