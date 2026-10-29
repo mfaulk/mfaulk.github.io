@@ -862,6 +862,143 @@ class DecoderBlock(nn.Module):
         return x
 ```
 
+## Embeddings and the Output Head
+
+Everything so far operates on vectors of width `d_model`. Real input is discrete — token ids — and real output is a distribution over a vocabulary. Converting between the two is the job of the pink boxes at the bottom of the diagram and the Linear/Softmax at the top.
+
+Before the vocabulary holds any real words, it needs three reserved ids: one to pad short sequences, one to start the decoder off, and one for the model to emit when it is finished.
+
+```python
+PAD, BOS, EOS = 0, 1, 2
+```
+
+An embedding table then maps each id to a learned vector:
+
+```python
+self.src_embed = nn.Embedding(src_vocab_size, d_model, padding_idx=PAD)
+self.tgt_embed = nn.Embedding(tgt_vocab_size, d_model, padding_idx=PAD)
+```
+
+`padding_idx` pins the row for `PAD` to zeros and keeps it from accumulating gradient, which pairs with the padding masks from earlier.
+
+The paper then scales the embeddings by $\sqrt{d_{\text{model}}}$ before the positional encoding is added. That scaling only makes sense alongside a particular initialization, and the two are easy to separate by accident. The paper initializes the embedding matrix the way it initializes a linear layer — entries with standard deviation around $d_{\text{model}}^{-1/2}$, small enough that the $O(1)$ sinusoids would otherwise swamp them — and the $\sqrt{d_{\text{model}}}$ multiply restores the token signal to unit scale. PyTorch's `nn.Embedding` does **not** initialize that way: its default is $\mathcal{N}(0, 1)$, so multiplying by $\sqrt{d_{\text{model}}}$ scales entries *up* by a factor of about 23 at $d_{\text{model}} = 512$, which is the opposite of the intent. Plenty of published implementations carry the multiply without the matching initialization. We set it explicitly so the two agree:
+
+```python
+nn.init.normal_(self.src_embed.weight, mean=0.0, std=d_model ** -0.5)
+nn.init.normal_(self.tgt_embed.weight, mean=0.0, std=d_model ** -0.5)
+with torch.no_grad():                       # padding_idx is zeroed at init, not after
+    self.src_embed.weight[PAD].zero_()
+    self.tgt_embed.weight[PAD].zero_()
+```
+
+This is not a nicety. On the toy task at the end of this post, leaving the default initialization in place while keeping the $\sqrt{d_{\text{model}}}$ multiply costs roughly an order of magnitude in final loss — 0.0985 against 0.0059 — and drops exact-match accuracy from 256/256 to 244/256.
+
+At the top of the model, one linear layer projects back to vocabulary size:
+
+```python
+self.out_proj = nn.Linear(d_model, tgt_vocab_size)
+```
+
+The diagram draws a softmax after it, but the module does not apply one. `F.cross_entropy` during training and `argmax` during decoding both work directly on the logits — the first is more numerically stable that way, and the second does not care, since softmax is monotonic.
+
+## Stacking the Blocks
+
+The `N×` in the diagram is a stack of identical blocks, each feeding the next:
+
+```python
+class Encoder(nn.Module):
+    """A stack of N encoder blocks."""
+
+    def __init__(self, num_layers: int, d_model: int, num_heads: int, d_ff: int,
+                 dropout_p: float = 0.1, activation: str = "relu"):
+        super().__init__()
+        self.layers = nn.ModuleList([
+            EncoderBlock(d_model=d_model, num_heads=num_heads, d_ff=d_ff,
+                         dropout_p=dropout_p, activation=activation)
+            for _ in range(num_layers)
+        ])
+        self.norm = nn.LayerNorm(d_model)
+
+    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+        for layer in self.layers:
+            x = layer(x, mask=mask)
+        return self.norm(x)
+
+
+class Decoder(nn.Module):
+    """A stack of N decoder blocks, each attending over the encoder output."""
+
+    def __init__(self, num_layers: int, d_model: int, num_heads: int, d_ff: int,
+                 dropout_p: float = 0.1, activation: str = "relu"):
+        super().__init__()
+        self.layers = nn.ModuleList([
+            DecoderBlock(d_model=d_model, num_heads=num_heads, d_ff=d_ff,
+                         dropout_p=dropout_p, activation=activation)
+            for _ in range(num_layers)
+        ])
+        self.norm = nn.LayerNorm(d_model)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        enc_out: torch.Tensor,
+        self_mask: Optional[torch.Tensor] = None,
+        cross_mask: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        for layer in self.layers:
+            x = layer(x, enc_out, self_mask=self_mask, cross_mask=cross_mask)
+        return self.norm(x)
+```
+
+Every decoder block attends over the same `enc_out`. The encoder runs once over the source and the whole stack of decoder blocks reads from that one result.
+
+The blocks are held in an `nn.ModuleList` rather than a plain Python list, so their parameters are registered with the parent and move with `.to(device)`. A plain list silently leaves them behind, and the model then trains badly in a way that is hard to trace. Each stack also ends with its own `LayerNorm`. That final norm belongs specifically to the pre-norm arrangement: with the normalization moved inside each block, nothing normalizes the output of the last residual addition, and activations coming off a deep stack can be large. Post-norm implementations do not need it.
+
+## The Full Model
+
+With the pieces in place, the model is mostly wiring:
+
+```python
+class Transformer(nn.Module):
+    """Encoder-decoder transformer over discrete token sequences."""
+
+    def __init__(self, src_vocab_size: int, tgt_vocab_size: int, d_model: int = 128,
+                 num_heads: int = 4, d_ff: int = 512, num_layers: int = 2,
+                 dropout_p: float = 0.1, max_len: int = 512):
+        super().__init__()
+        self.d_model = d_model
+
+        self.src_embed = nn.Embedding(src_vocab_size, d_model, padding_idx=PAD)
+        self.tgt_embed = nn.Embedding(tgt_vocab_size, d_model, padding_idx=PAD)
+        self.pos = PositionalEncoding(d_model, max_len=max_len, dropout_p=dropout_p)
+
+        self.encoder = Encoder(num_layers, d_model, num_heads, d_ff, dropout_p)
+        self.decoder = Decoder(num_layers, d_model, num_heads, d_ff, dropout_p)
+
+        self.out_proj = nn.Linear(d_model, tgt_vocab_size)
+
+        # Match the initialization the sqrt(d_model) scaling in encode/decode assumes.
+        for emb in (self.src_embed, self.tgt_embed):
+            nn.init.normal_(emb.weight, mean=0.0, std=d_model ** -0.5)
+            with torch.no_grad():
+                emb.weight[PAD].zero_()
+
+    def encode(self, src, src_mask=None):
+        x = self.pos(self.src_embed(src) * math.sqrt(self.d_model))
+        return self.encoder(x, mask=src_mask)
+
+    def decode(self, tgt, enc_out, self_mask=None, cross_mask=None):
+        x = self.pos(self.tgt_embed(tgt) * math.sqrt(self.d_model))
+        return self.decoder(x, enc_out, self_mask=self_mask, cross_mask=cross_mask)
+
+    def forward(self, src, tgt, src_mask=None, tgt_mask=None):
+        enc_out = self.encode(src, src_mask=src_mask)
+        dec_out = self.decode(tgt, enc_out, self_mask=tgt_mask, cross_mask=src_mask)
+        return self.out_proj(dec_out)
+```
+
+Note which mask goes where. `src_mask` hides source padding, and it is used twice: once in the encoder's self-attention, and again as the decoder's `cross_mask`, because the decoder is attending over those same source positions. `tgt_mask` is the causal mask over the target. `encode` and `decode` are split out rather than folded into `forward` because generation needs them separately — it encodes once and decodes repeatedly.
+
 ## Detailed Recap
 Revisit the diagram at the start of the post in more detail. This could show the dimensions of matrices, einsums, etc.
 
