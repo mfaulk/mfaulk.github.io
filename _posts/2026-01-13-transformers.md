@@ -1,6 +1,6 @@
 # Deep Learning: Transformers
 
-This post is a detailed look at the original Transformer. We'll working through the intuition, architecture, and a PyTorch implementation. By the end, you should be able to train and run your own transformer, and feel comfortable with each component in this diagram:
+This post is a detailed look at the original Transformer. We'll be working through the intuition, architecture, and a PyTorch implementation. By the end, you should be able to train and run your own transformer, and feel comfortable with each component in this diagram:
 
 <figure style="text-align: center;">
   <img src="/assets/images/transformer-architecture.png" alt="Transformer Architecture" style="max-width: 100%; height: auto; margin: auto;">
@@ -14,7 +14,7 @@ In less than a decade, transformers have become the dominant architecture in mod
 This section steps through the definition and implementation of each part of the diagram:
 
 - Attention
-- Scaled dot product attention, 
+- Scaled dot product attention
 - Multi-Head Attention
 - QKV projections
 - Layer norm / dropout
@@ -95,7 +95,7 @@ For a single query, we have
   <figcaption>Scaled dot product attention</figcaption>
 </figure>
 
-The scaling term $\sqrt(d_k)$ in the denominator serves to normalize the magnitude of the dot products between queries and keys. Without it, when the dimensionality $d_k$ is large, the dot products tend to grow in magnitude, pushing the softmax function into regions where it becomes extremely peaked. As a result, gradients to vanish and learning slows. We can see this by looking at the gradients of the softmax function w.r.t its inputs. Recall that the softmax of a vector $z$ is given by
+The scaling term $\sqrt{d_k}$ in the denominator serves to normalize the magnitude of the dot products between queries and keys. Without it, when the dimensionality $d_k$ is large, the dot products tend to grow in magnitude, pushing the softmax function into regions where it becomes extremely peaked. As a result, gradients vanish and learning slows. We can see this by looking at the gradients of the softmax function w.r.t. its inputs. Recall that the softmax of a vector $z$ is given by
 
 $$ \text{softmax}(\mathbf{z}) = \frac{e^{z_i}}{ \sum_{j = 1}^N e^{z_j}}$$
 
@@ -106,7 +106,7 @@ and its gradients are
   <figcaption>Gradients of the softmax function. <a href="https://medium.com/data-science/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1">Image credit</a>: Thomas Kurbiel, "Derivative of the Softmax Function and the Categorical Cross-Entropy Loss"</figcaption>
 </figure>
 
-When softmax saturates, a single $s_i$ value approaches 1, and the others approach $0$, and the gradients all vanish. Dividing by $\sqrt(d_k)$ counteracts this effect by keeping the variance of the dot products roughly constant, ensuring that attention weights remain well-scaled and that the model can learn effectively across different embedding dimensions.
+When softmax saturates, a single $s_i$ value approaches 1, and the others approach $0$, and the gradients all vanish. Dividing by $\sqrt{d_k}$ counteracts this effect by keeping the variance of the dot products roughly constant, ensuring that attention weights remain well-scaled and that the model can learn effectively across different embedding dimensions.
 
 In code:
 
@@ -458,7 +458,7 @@ Meta-lesson: Attention assumes that a useful notion of relevance exists, then le
 
 <figure style="text-align: center;">
   <img src="/assets/images/projections-and-attention.png" alt="Projection matrices, self-attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Projection matrices and self-attention. [Image credit](https://newsletter.theaiedge.io/p/understanding-the-self-attention)</figcaption>
+  <figcaption>Projection matrices and self-attention. <a href="https://newsletter.theaiedge.io/p/understanding-the-self-attention">Image credit</a>: The AiEdge, "Understanding the Self-Attention Mechanism"</figcaption>
 </figure>
 
 
@@ -466,7 +466,7 @@ Meta-lesson: Attention assumes that a useful notion of relevance exists, then le
 
 <figure style="text-align: center;">
   <img src="/assets/images/transformer-encoder-and-decoder-architectures.png" alt="Encoder-Decoder Architectures" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Encoder-Decoder Architectures[Image credit]()</figcaption>
+  <figcaption>Encoder-Decoder Architectures. Image credit: unknown (TODO: identify source or redraw)</figcaption>
 </figure>
 
 
@@ -558,8 +558,6 @@ class EncoderBlock(nn.Module):
 
         return (x, attn) if return_attn else x
 ```
-
-Explain pre-norm vs pot-norm:
 
 The original Transformer paper, Attention Is All You Need, used the post-norm formulation, where LayerNorm is applied after each residual addition. This worked well for the relatively shallow models studied at the time (e.g., 6 encoder layers), but later work found that post-norm Transformers become increasingly difficult to train as depth grows, often requiring careful learning-rate warmup and tuning to remain stable. As a result, most modern implementations adopt the pre-norm variant, which applies LayerNorm before each sublayer. Pre-norm preserves an exact identity path through the residual connections, greatly improving gradient flow and making deep Transformers significantly more stable and easier to optimize, which is why it is now the default choice in practice.
 
