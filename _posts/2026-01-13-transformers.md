@@ -545,9 +545,9 @@ class EncoderBlock(nn.Module):
         # ---- Self-attention sublayer (pre-norm) ----
         x_norm = self.norm1(x)
         if return_attn:
-            attn_out, attn = self.self_attn(x_q=x_norm, x_kv=None, mask=mask, return_attn=True)
+            attn_out, attn = self.self_attn(x_q=x_norm, mask=mask, return_attn=True)
         else:
-            attn_out = self.self_attn(x_q=x_norm, x_kv=None, mask=mask, return_attn=False)
+            attn_out = self.self_attn(x_q=x_norm, mask=mask, return_attn=False)
 
         x = x + self.dropout(attn_out)
 
@@ -654,17 +654,17 @@ class DecoderBlock(nn.Module):
         # ---- Masked self-attention (pre-norm) ----
         x_norm = self.norm1(x)
         if return_attn:
-            self_out, attn_self = self.self_attn(x_q=x_norm, x_kv=None, mask=self_mask, return_attn=True)
+            self_out, attn_self = self.self_attn(x_q=x_norm, mask=self_mask, return_attn=True)
         else:
-            self_out = self.self_attn(x_q=x_norm, x_kv=None, mask=self_mask, return_attn=False)
+            self_out = self.self_attn(x_q=x_norm, mask=self_mask, return_attn=False)
         x = x + self.dropout(self_out)
 
         # ---- Cross-attention (pre-norm): queries from decoder, keys/values from encoder ----
         x_norm = self.norm2(x)
         if return_attn:
-            cross_out, attn_cross = self.cross_attn(x_q=x_norm, x_kv=enc_out, mask=cross_mask, return_attn=True)
+            cross_out, attn_cross = self.cross_attn(x_q=x_norm, x_k=enc_out, mask=cross_mask, return_attn=True)
         else:
-            cross_out = self.cross_attn(x_q=x_norm, x_kv=enc_out, mask=cross_mask, return_attn=False)
+            cross_out = self.cross_attn(x_q=x_norm, x_k=enc_out, mask=cross_mask, return_attn=False)
         x = x + self.dropout(cross_out)
 
         # ---- Feed-forward (pre-norm) ----
