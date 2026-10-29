@@ -4,7 +4,7 @@ This post is a detailed look at the original Transformer. We'll be working throu
 
 <figure style="text-align: center;">
   <img src="/assets/images/transformer-architecture.png" alt="Transformer Architecture" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Transformer Architecture. Image credit: Efficient Transformers: A Survey</figcaption>
+  <figcaption>Transformer Architecture. <a href="https://arxiv.org/abs/2009.06732">Image credit</a>: Tay et al., "Efficient Transformers: A Survey"</figcaption>
 </figure>
  
 # The Transformer
@@ -86,7 +86,7 @@ At its core, *attention is a method for computing a weighted average over a set 
 
 <figure style="text-align: center;">
   <img src="/assets/images/scaled-dot-product-attention-diagram.png" alt="Scaled dot product attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Scaled dot product attention</figcaption>
+  <figcaption>Scaled dot product attention. Detail from the architecture diagram above, <a href="https://arxiv.org/abs/2009.06732">image credit</a>: Tay et al., "Efficient Transformers: A Survey"</figcaption>
 </figure>
 
 
@@ -238,7 +238,7 @@ def scaled_dot_product_attention(
 
 <figure style="text-align: center;">
   <img src="/assets/images/multi-head-attention-diagram.png" alt="Multi-Head Attention Diagram" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Multi-head attention</figcaption>
+  <figcaption>Multi-head attention. Detail from the architecture diagram above, <a href="https://arxiv.org/abs/2009.06732">image credit</a>: Tay et al., "Efficient Transformers: A Survey"</figcaption>
 </figure>
 
 Scaled dot-product attention gives us a powerful primitive: given a query, we compute a weighted average over a set of values based on their relevance. However, a single attention operation forces the model to express all relationships in one shared representation space. In practice, different types of relationships—such as syntactic structure, semantic similarity, or positional alignment—can interfere with one another when compressed into a single set of attention weights. Multi-head attention addresses this limitation by running several attention operations in parallel, each with its own learned projections of queries, keys, and values.
