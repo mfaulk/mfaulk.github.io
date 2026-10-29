@@ -68,8 +68,8 @@ A specific example: The [sequence-to-sequence model](https://arxiv.org/abs/1409.
 Attention allows a model to dynamically focus on the most relevant parts of its input when making each decision, weighting information based on how strongly it relates to the current context.
 
 <figure style="text-align: center;">
-  <img src="/assets/images/attention-weighted-edges.png" alt="Attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Attention models the relevance of a query to each element of a sequence. Image credit: unknown (TODO: identify source or redraw)</figcaption>
+  <img src="/assets/images/attention-query-keys.svg" alt="The word crane, acting as a query, connected by edges to every word of the sentence The crane lifted the steel beam. The heaviest edges run to lifted and beam." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Attention models the relevance of a query to each element of a sequence. Here the ambiguous word <em>crane</em> resolves against the words that disambiguate it.</figcaption>
 </figure>
 
 
