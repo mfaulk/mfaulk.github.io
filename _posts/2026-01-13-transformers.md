@@ -108,7 +108,7 @@ where
 
 The scaling term $\sqrt{d_k}$ in the denominator serves to normalize the magnitude of the dot products between queries and keys. Without it, when the dimensionality $d_k$ is large, the dot products tend to grow in magnitude, pushing the softmax function into regions where it becomes extremely peaked. As a result, gradients vanish and learning slows. We can see this by looking at the gradients of the softmax function w.r.t. its inputs. Recall that the softmax of a vector $z$ is given by
 
-$$ \text{softmax}(\mathbf{z}) = \frac{e^{z_i}}{ \sum_{j = 1}^N e^{z_j}}$$
+$$ s_i = \text{softmax}(\mathbf{z})_i = \frac{e^{z_i}}{ \sum_{j = 1}^N e^{z_j}}$$
 
 and its gradients are 
 
