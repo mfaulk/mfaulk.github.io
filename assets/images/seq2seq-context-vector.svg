@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 562 310" width="562" height="310" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="An RNN encoder reads the sentence the cat drank the milk into a single fixed-length context vector, which a decoder then expands into le chat a bu le lait.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 562 272" width="562" height="272" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="An RNN encoder reads the sentence the cat drank the milk into a single fixed-length context vector, which a decoder then expands into le chat a bu le lait.">
 <title>Encoder-decoder with a fixed-length context vector</title>
 <defs>
 <marker id="ae" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1F5CA8"/></marker>
@@ -42,5 +42,4 @@
 <text x="185.8" y="111" font-size="14" fill="currentColor" opacity="0.8">context vector</text>
 <path d="M 493.1 64 V 142.0 H 468.4" fill="none" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#ae)"/>
 <path d="M 179.8 142.0 H 127.0 V 212" fill="none" stroke="#B4531A" stroke-width="1.5" marker-end="url(#ad)"/>
-<text x="18" y="290" font-size="13" fill="currentColor" opacity="0.65">Everything the decoder knows about the source has to fit in that one vector.</text>
 </svg>

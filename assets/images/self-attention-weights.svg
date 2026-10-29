@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 506 458" width="506" height="458" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="Self-attention weight matrix for the tokens How are you doing ?">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 506 420" width="506" height="420" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="Self-attention weight matrix for the tokens How are you doing ?">
 <title>Self-attention weights for each pair of positions</title>
 <text x="323.0" y="30" text-anchor="middle" font-size="15" fill="currentColor" opacity="0.75">key — attended to</text>
 <text x="26" y="247.0" text-anchor="middle" font-size="15" fill="currentColor" opacity="0.75" transform="rotate(-90 26 247.0)">query — attending</text>
@@ -62,5 +62,4 @@
 <text x="385.0" y="376.0" text-anchor="middle" font-size="14" fill="#ffffff">0.33</text>
 <rect x="416" y="340" width="62" height="62" fill="#8faed5" stroke="#ffffff" stroke-width="2"/>
 <text x="447.0" y="376.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.25</text>
-<text x="168" y="434" font-size="13" fill="currentColor" opacity="0.65">Each row is a softmax over the keys, so it sums to 1.</text>
 </svg>

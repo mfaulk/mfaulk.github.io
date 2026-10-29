@@ -57,7 +57,7 @@ Before transformers, most sequence-to-sequence models relied on [recurrent neura
 
 <figure style="text-align: center;">
   <img src="/assets/images/seq2seq-context-vector.svg" alt="An RNN encoder reads the words the, cat, drank, the, milk one at a time into a single fixed-length context vector, which a decoder then expands into le, chat, a, bu, le, lait." style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>An encoder-decoder architecture with fixed-length context vector (encoding).</figcaption>
+  <figcaption>An encoder-decoder architecture with a fixed-length context vector. Everything the decoder knows about the source has to fit in that one vector.</figcaption>
 </figure>
 
 
@@ -69,7 +69,7 @@ Attention allows a model to dynamically focus on the most relevant parts of its 
 
 <figure style="text-align: center;">
   <img src="/assets/images/attention-query-keys.svg" alt="The word crane, acting as a query, connected by edges to every word of the sentence The crane lifted the steel beam. The heaviest edges run to lifted and beam." style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Attention models the relevance of a query to each element of a sequence. Here the ambiguous word <em>crane</em> resolves against the words that disambiguate it.</figcaption>
+  <figcaption>Attention models the relevance of a query to each element of a sequence. Thicker edges carry more weight: the ambiguous word <em>crane</em> resolves against <em>lifted</em> and <em>beam</em>, settling the machine reading over the bird.</figcaption>
 </figure>
 
 
@@ -181,7 +181,7 @@ Self-attention allows every element in a sequence to attend to every other eleme
 
 <figure style="text-align: center;">
   <img src="/assets/images/self-attention-weights.svg" alt="A five by five matrix of self-attention weights over the tokens How, are, you, doing, and the question mark. Each row is a query, each column a key, and the shading shows how strongly that query attends to that key." style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Self-attention weights for each pair of positions. Darker cells carry more weight, and each row sums to one.</figcaption>
+  <figcaption>Self-attention weights for each pair of positions. Darker cells carry more weight, and each row is a softmax over the keys, so it sums to one.</figcaption>
 </figure>
 
 Let's update the implementation of scaled_dot_product_attention to compute attention for multiple queries, and allow for an optional dimension for batches:
