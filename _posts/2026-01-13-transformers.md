@@ -110,12 +110,25 @@ The scaling term $\sqrt{d_k}$ in the denominator serves to normalize the magnitu
 
 $$ s_i = \text{softmax}(\mathbf{z})_i = \frac{e^{z_i}}{ \sum_{j = 1}^N e^{z_j}}$$
 
-and its gradients are 
+Because every output depends on every input, the derivative is a full Jacobian rather than a single number. Differentiating gives
 
-<figure style="text-align: center;">
-  <img src="/assets/images/softmax-gradients.png" alt="Softmax gradients" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Gradients of the softmax function. <a href="https://medium.com/data-science/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1">Image credit</a>: Thomas Kurbiel, "Derivative of the Softmax Function and the Categorical Cross-Entropy Loss"</figcaption>
-</figure>
+$$
+\frac{\partial s_i}{\partial z_j} = s_i \left( \delta_{ij} - s_j \right)
+$$
+
+where $\delta_{ij}$ is $1$ when $i = j$ and $0$ otherwise. Thomas Kurbiel works the derivation through step by step in [Derivative of the Softmax Function and the Categorical Cross-Entropy Loss](https://medium.com/data-science/derivative-of-the-softmax-function-and-the-categorical-cross-entropy-loss-ffceefc081d1). Writing the entries out for $N = 4$ makes the structure visible:
+
+$$
+J_{\text{softmax}} =
+\begin{pmatrix}
+s_1(1 - s_1) & -s_1 s_2      & -s_1 s_3      & -s_1 s_4 \\
+-s_2 s_1     & s_2(1 - s_2)  & -s_2 s_3      & -s_2 s_4 \\
+-s_3 s_1     & -s_3 s_2      & s_3(1 - s_3)  & -s_3 s_4 \\
+-s_4 s_1     & -s_4 s_2      & -s_4 s_3      & s_4(1 - s_4)
+\end{pmatrix}
+$$
+
+The diagonal entries take the form $s_i(1 - s_i)$ and the off-diagonal entries $-s_i s_j$, but either way every entry carries a factor of some $s$.
 
 When softmax saturates, a single $s_i$ value approaches 1, and the others approach $0$, and the gradients all vanish. Dividing by $\sqrt{d_k}$ counteracts this effect by keeping the variance of the dot products roughly constant, ensuring that attention weights remain well-scaled and that the model can learn effectively across different embedding dimensions.
 
