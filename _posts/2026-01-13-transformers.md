@@ -18,7 +18,7 @@ This section steps through the definition and implementation of each part of the
 - Multi-Head Attention
 - QKV projections
 - Layer norm / dropout
-- Positional embeddings (Maybe RoPE?)
+- Positional embeddings
 - Masking
 
 Before getting started, let's define some symbols for the dimensions involved, and import some things we'll use in the code snippets:
@@ -461,6 +461,88 @@ Meta-lesson: Attention assumes that a useful notion of relevance exists, then le
   <figcaption>Projection matrices and self-attention. <a href="https://newsletter.theaiedge.io/p/understanding-the-self-attention">Image credit</a>: The AiEdge, "Understanding the Self-Attention Mechanism"</figcaption>
 </figure>
 
+
+## Positional Embeddings
+
+Attention computes a weighted average over a set of elements, and nothing in that computation refers to where an element sits in the sequence. The scores come from $QK^T$, which compares content against content, and the output sums over all positions. Permute the input and the output permutes the same way, with every value unchanged. Writing $P$ for a permutation matrix,
+
+$$
+\text{Attention}(PQ, PK, PV) = P \cdot \text{Attention}(Q, K, V)
+$$
+
+because the $P^T P$ introduced by $(PQ)(PK)^T$ cancels. The feed-forward sublayer applies to each position independently, so it preserves the property as well. As far as the architecture is concerned, "the cat sat on the mat" and "the mat sat on the cat" are the same bag of words.
+
+The fix in *Attention Is All You Need* is to put position into the representation itself, by adding a positional encoding to each input embedding before the first layer:
+
+$$ x_t = \sqrt{d_{\text{model}}} \cdot \text{Embedding}(w_t) + \text{PE}_t $$
+
+The encoding is built from sinusoids of geometrically increasing wavelength. For position $t$ and embedding dimension $i$:
+
+$$
+\text{PE}_{(t,\, 2i)} = \sin\!\left(\frac{t}{10000^{2i/d_{\text{model}}}}\right), \qquad
+\text{PE}_{(t,\, 2i+1)} = \cos\!\left(\frac{t}{10000^{2i/d_{\text{model}}}}\right)
+$$
+
+Each pair of dimensions holds one sinusoid, and the wavelengths run from $2\pi$ in the lowest pair up to $10000 \cdot 2\pi$ in the highest. Low dimensions oscillate quickly and distinguish neighboring positions; high dimensions oscillate slowly and distinguish regions of a long sequence.
+
+Three properties make this a reasonable choice over, say, feeding the raw index $t$ as a feature. The values stay in $[-1, 1]$ regardless of sequence length, so they do not swamp the embedding they are added to. The encoding has no parameters and is defined for every $t$, so a model can be run on sequences longer than any it saw in training. And for any fixed offset $k$, the angle-addition identities make $\text{PE}_{t+k}$ a linear function of $\text{PE}_t$ — a rotation by an angle that depends only on $k$, not on $t$. The paper hypothesized that this is what lets the model learn to attend by relative position.
+
+In code:
+
+```python
+class PositionalEncoding(nn.Module):
+    """
+    Fixed sinusoidal positional encoding.
+
+    The table is precomputed and registered as a buffer, so it moves with
+    .to(device) and is saved in the state dict without being a parameter.
+    """
+
+    def __init__(self, d_model: int, max_len: int = 5000, dropout_p: float = 0.0):
+        """
+        Args:
+            d_model: Embedding dimension. Must be even, so that each sinusoid
+                     occupies one (sin, cos) pair of dimensions.
+            max_len: Largest sequence length the table is built for.
+            dropout_p: Dropout applied to the sum of embedding and encoding.
+        """
+        super().__init__()
+        if d_model % 2 != 0:
+            raise ValueError(f"d_model must be even; got d_model={d_model}")
+
+        self.dropout = nn.Dropout(p=dropout_p)
+
+        # Positions t = 0, 1, ..., max_len - 1
+        t = torch.arange(max_len).unsqueeze(1)          # (max_len, 1)
+
+        # 10000^(-2i/d_model), computed in log space for numerical stability.
+        div = torch.exp(
+            torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model)
+        )                                               # (d_model/2,)
+
+        pe = torch.zeros(max_len, d_model)
+        pe[:, 0::2] = torch.sin(t * div)                # even dimensions
+        pe[:, 1::2] = torch.cos(t * div)                # odd dimensions
+
+        self.register_buffer("pe", pe.unsqueeze(0))     # (1, max_len, d_model)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+            x: (B, T, d_model), embeddings already scaled by sqrt(d_model).
+
+        Returns:
+            (B, T, d_model)
+        """
+        T = x.size(1)
+        if T > self.pe.size(1):
+            raise ValueError(f"sequence length {T} exceeds max_len {self.pe.size(1)}")
+        return self.dropout(x + self.pe[:, :T])
+```
+
+The encoding is added to the embeddings rather than concatenated, which costs no extra dimensions and lets every layer above see position information mixed into the same $d_{\text{model}}$ channels.
+
+Two alternatives are worth knowing. Learned absolute embeddings replace the table with an `nn.Embedding(max_len, d_model)` trained like any other parameter — simpler to state, and used by BERT and GPT-2, but defined only up to `max_len`. Rotary position embeddings (RoPE) take a different route: instead of adding anything to the input, they rotate the query and key vectors inside each attention operation by an angle proportional to position, so the dot product between a query and a key depends directly on their separation. RoPE is the common choice in current large language models.
 
 ## Encoder-Decoder
 
