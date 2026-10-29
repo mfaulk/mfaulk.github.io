@@ -68,8 +68,8 @@ A specific example: The [sequence-to-sequence model](https://arxiv.org/abs/1409.
 Attention allows a model to dynamically focus on the most relevant parts of its input when making each decision, weighting information based on how strongly it relates to the current context.
 
 <figure style="text-align: center;">
-  <img src="/assets/images/attention-weighted-edges.png" alt="Attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Attention models the relevance of a query to each element of a sequence. Image credit: unknown (TODO: identify source or redraw)</figcaption>
+  <img src="/assets/images/attention-query-keys.svg" alt="The word crane, acting as a query, connected by edges to every word of the sentence The crane lifted the steel beam. The heaviest edges run to lifted and beam." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Attention models the relevance of a query to each element of a sequence. Here the ambiguous word <em>crane</em> resolves against the words that disambiguate it.</figcaption>
 </figure>
 
 
@@ -180,8 +180,8 @@ In the special case where the queries, keys, and values all come from the same s
 Self-attention allows every element in a sequence to attend to every other element, including itself. This means that each element’s representation is updated based on a weighted combination of all elements in the sequence, where the weights reflect their relevance to that element.
 
 <figure style="text-align: center;">
-  <img src="/assets/images/attention-weights-small.png" alt="Attention weights" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Self-attention weights for each pair of positions. Image credit: unknown (TODO: identify source or redraw)</figcaption>
+  <img src="/assets/images/self-attention-weights.svg" alt="A five by five matrix of self-attention weights over the tokens How, are, you, doing, and the question mark. Each row is a query, each column a key, and the shading shows how strongly that query attends to that key." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Self-attention weights for each pair of positions. Darker cells carry more weight, and each row sums to one.</figcaption>
 </figure>
 
 Let's update the implementation of scaled_dot_product_attention to compute attention for multiple queries, and allow for an optional dimension for batches:

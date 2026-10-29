@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 506 458" width="506" height="458" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="Self-attention weight matrix for the tokens How are you doing ?">
+<title>Self-attention weights for each pair of positions</title>
+<text x="323.0" y="30" text-anchor="middle" font-size="15" fill="currentColor" opacity="0.75">key — attended to</text>
+<text x="26" y="247.0" text-anchor="middle" font-size="15" fill="currentColor" opacity="0.75" transform="rotate(-90 26 247.0)">query — attending</text>
+<text x="199.0" y="78" text-anchor="middle" font-size="16" fill="currentColor">How</text>
+<text x="261.0" y="78" text-anchor="middle" font-size="16" fill="currentColor">are</text>
+<text x="323.0" y="78" text-anchor="middle" font-size="16" fill="currentColor">you</text>
+<text x="385.0" y="78" text-anchor="middle" font-size="16" fill="currentColor">doing</text>
+<text x="447.0" y="78" text-anchor="middle" font-size="16" fill="currentColor">?</text>
+<text x="152" y="128.0" text-anchor="end" font-size="16" fill="currentColor">How</text>
+<rect x="168" y="92" width="62" height="62" fill="#1f5ca8" stroke="#ffffff" stroke-width="2"/>
+<text x="199.0" y="128.0" text-anchor="middle" font-size="14" fill="#ffffff">0.55</text>
+<rect x="230" y="92" width="62" height="62" fill="#a1bcdc" stroke="#ffffff" stroke-width="2"/>
+<text x="261.0" y="128.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.20</text>
+<rect x="292" y="92" width="62" height="62" fill="#c7d8eb" stroke="#ffffff" stroke-width="2"/>
+<text x="323.0" y="128.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.10</text>
+<rect x="354" y="92" width="62" height="62" fill="#c7d8eb" stroke="#ffffff" stroke-width="2"/>
+<text x="385.0" y="128.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.10</text>
+<rect x="416" y="92" width="62" height="62" fill="#d9e5f3" stroke="#ffffff" stroke-width="2"/>
+<text x="447.0" y="128.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.05</text>
+<text x="152" y="190.0" text-anchor="end" font-size="16" fill="currentColor">are</text>
+<rect x="168" y="154" width="62" height="62" fill="#9ab7d9" stroke="#ffffff" stroke-width="2"/>
+<text x="199.0" y="190.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.22</text>
+<rect x="230" y="154" width="62" height="62" fill="#4477b7" stroke="#ffffff" stroke-width="2"/>
+<text x="261.0" y="190.0" text-anchor="middle" font-size="14" fill="#ffffff">0.45</text>
+<rect x="292" y="154" width="62" height="62" fill="#a9c2df" stroke="#ffffff" stroke-width="2"/>
+<text x="323.0" y="190.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.18</text>
+<rect x="354" y="154" width="62" height="62" fill="#c7d8eb" stroke="#ffffff" stroke-width="2"/>
+<text x="385.0" y="190.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.10</text>
+<rect x="416" y="154" width="62" height="62" fill="#d9e5f3" stroke="#ffffff" stroke-width="2"/>
+<text x="447.0" y="190.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.05</text>
+<text x="152" y="252.0" text-anchor="end" font-size="16" fill="currentColor">you</text>
+<rect x="168" y="216" width="62" height="62" fill="#ceddee" stroke="#ffffff" stroke-width="2"/>
+<text x="199.0" y="252.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.08</text>
+<rect x="230" y="216" width="62" height="62" fill="#b4cae4" stroke="#ffffff" stroke-width="2"/>
+<text x="261.0" y="252.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.15</text>
+<rect x="292" y="216" width="62" height="62" fill="#4f80bb" stroke="#ffffff" stroke-width="2"/>
+<text x="323.0" y="252.0" text-anchor="middle" font-size="14" fill="#ffffff">0.42</text>
+<rect x="354" y="216" width="62" height="62" fill="#84a6d0" stroke="#ffffff" stroke-width="2"/>
+<text x="385.0" y="252.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.28</text>
+<rect x="416" y="216" width="62" height="62" fill="#d2e0f0" stroke="#ffffff" stroke-width="2"/>
+<text x="447.0" y="252.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.07</text>
+<text x="152" y="314.0" text-anchor="end" font-size="16" fill="currentColor">doing</text>
+<rect x="168" y="278" width="62" height="62" fill="#d6e3f1" stroke="#ffffff" stroke-width="2"/>
+<text x="199.0" y="314.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.06</text>
+<rect x="230" y="278" width="62" height="62" fill="#c7d8eb" stroke="#ffffff" stroke-width="2"/>
+<text x="261.0" y="314.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.10</text>
+<rect x="292" y="278" width="62" height="62" fill="#7ca1cd" stroke="#ffffff" stroke-width="2"/>
+<text x="323.0" y="314.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.30</text>
+<rect x="354" y="278" width="62" height="62" fill="#487ab8" stroke="#ffffff" stroke-width="2"/>
+<text x="385.0" y="314.0" text-anchor="middle" font-size="14" fill="#ffffff">0.44</text>
+<rect x="416" y="278" width="62" height="62" fill="#c7d8eb" stroke="#ffffff" stroke-width="2"/>
+<text x="447.0" y="314.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.10</text>
+<text x="152" y="376.0" text-anchor="end" font-size="16" fill="currentColor">?</text>
+<rect x="168" y="340" width="62" height="62" fill="#c7d8eb" stroke="#ffffff" stroke-width="2"/>
+<text x="199.0" y="376.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.10</text>
+<rect x="230" y="340" width="62" height="62" fill="#bfd2e8" stroke="#ffffff" stroke-width="2"/>
+<text x="261.0" y="376.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.12</text>
+<rect x="292" y="340" width="62" height="62" fill="#a1bcdc" stroke="#ffffff" stroke-width="2"/>
+<text x="323.0" y="376.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.20</text>
+<rect x="354" y="340" width="62" height="62" fill="#7198c9" stroke="#ffffff" stroke-width="2"/>
+<text x="385.0" y="376.0" text-anchor="middle" font-size="14" fill="#ffffff">0.33</text>
+<rect x="416" y="340" width="62" height="62" fill="#8faed5" stroke="#ffffff" stroke-width="2"/>
+<text x="447.0" y="376.0" text-anchor="middle" font-size="14" fill="#1a2a3a">0.25</text>
+<text x="168" y="434" font-size="13" fill="currentColor" opacity="0.65">Each row is a softmax over the keys, so it sums to 1.</text>
+</svg>
