@@ -180,8 +180,8 @@ In the special case where the queries, keys, and values all come from the same s
 Self-attention allows every element in a sequence to attend to every other element, including itself. This means that each element’s representation is updated based on a weighted combination of all elements in the sequence, where the weights reflect their relevance to that element.
 
 <figure style="text-align: center;">
-  <img src="/assets/images/attention-weights-small.png" alt="Attention weights" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Self-attention weights for each pair of positions. Image credit: unknown (TODO: identify source or redraw)</figcaption>
+  <img src="/assets/images/self-attention-weights.svg" alt="A five by five matrix of self-attention weights over the tokens How, are, you, doing, and the question mark. Each row is a query, each column a key, and the shading shows how strongly that query attends to that key." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Self-attention weights for each pair of positions. Darker cells carry more weight, and each row sums to one.</figcaption>
 </figure>
 
 Let's update the implementation of scaled_dot_product_attention to compute attention for multiple queries, and allow for an optional dimension for batches:
