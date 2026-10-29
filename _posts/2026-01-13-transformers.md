@@ -92,12 +92,19 @@ At its core, *attention is a method for computing a weighted average over a set 
 
 Formally, this process can be viewed as mapping a query and a set of key–value pairs to an output vector. The relevance scores between the query and each key are computed via dot products, scaled for numerical stability, and passed through a softmax function to form a probability distribution over the elements. The final output is then a weighted sum of the values — effectively the expected value of the sequence given the query. This is known as *scaled dot-product attention*. 
 
-For a single query, we have
+For a single query vector $q$, a set of keys $K = [k_1, k_2, \dots, k_T]$, and corresponding values $V = [v_1, v_2, \dots, v_T]$, scaled dot-product attention is defined as
 
-<figure style="text-align: center;">
-  <img src="/assets/images/single-query-scaled-dpa.png" alt="Scaled dot product attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Scaled dot product attention</figcaption>
-</figure>
+$$
+\text{Attention}(q, K, V) = \text{softmax}\!\left(\frac{qK^T}{\sqrt{d_k}}\right)V
+$$
+
+where
+
+- $q \in \mathbb{R}^{d_k}$ is the **query** vector,
+- $K \in \mathbb{R}^{T \times d_k}$ are the **keys**,
+- $V \in \mathbb{R}^{T \times d_v}$ are the **values**,
+- $d_k$ is the dimensionality of the keys and queries, and
+- $d_v$ is the dimensionality of the values.
 
 The scaling term $\sqrt{d_k}$ in the denominator serves to normalize the magnitude of the dot products between queries and keys. Without it, when the dimensionality $d_k$ is large, the dot products tend to grow in magnitude, pushing the softmax function into regions where it becomes extremely peaked. As a result, gradients vanish and learning slows. We can see this by looking at the gradients of the softmax function w.r.t. its inputs. Recall that the softmax of a vector $z$ is given by
 
