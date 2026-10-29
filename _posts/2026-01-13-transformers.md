@@ -56,8 +56,8 @@ import torch.nn.functional as F
 Before transformers, most sequence-to-sequence models relied on [recurrent neural networks](https://doi.org/10.1207/s15516709cog1402_1) (RNNs) and their more sophisticated variants like [Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) (LSTM) and [Gated Recurrent Units](https://arxiv.org/abs/1406.1078) (GRUs). These architectures process sequences one element at a time, updating a hidden state as each new element arrives. This design gives RNNs a natural sense of order but also serious limitations: long-range dependencies are difficult to capture, gradients tend to vanish over many time steps, and the inherently sequential nature of recurrence makes training slow and difficult to parallelize.
 
 <figure style="text-align: center;">
-  <img src="/assets/images/seq-to-seq-encoder-decoder.png" alt="Encoder-Decoder" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>An encoder-decoder architecture with fixed-length context vector (encoding). <a href="https://lilianweng.github.io/posts/2018-06-24-attention/">Image credit</a>: Lilian Weng, "Attention? Attention!"</figcaption>
+  <img src="/assets/images/seq2seq-context-vector.svg" alt="An RNN encoder reads the words the, cat, drank, the, milk one at a time into a single fixed-length context vector, which a decoder then expands into le, chat, a, bu, le, lait." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>An encoder-decoder architecture with fixed-length context vector (encoding).</figcaption>
 </figure>
 
 
@@ -1176,6 +1176,7 @@ The one arrow that is easy to lose track of is the long one from the top of the 
 
 1. [Attention is All You Need](https://arxiv.org/abs/1706.03762)
 1. [The Annotated Transformer](https://nlp.seas.harvard.edu/annotated-transformer/)
+1. [Attention? Attention!](https://lilianweng.github.io/posts/2018-06-24-attention/) (Lilian Weng, 2018)
 1. [Efficient Transformers: A Survey](https://arxiv.org/abs/2009.06732)
 1. [Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473)
 1. [Effective Approaches to Attention-based Neural Machine Translation](https://arxiv.org/abs/1508.04025)

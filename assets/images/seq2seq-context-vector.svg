@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 562 310" width="562" height="310" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="An RNN encoder reads the sentence the cat drank the milk into a single fixed-length context vector, which a decoder then expands into le chat a bu le lait.">
+<title>Encoder-decoder with a fixed-length context vector</title>
+<defs>
+<marker id="ae" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1F5CA8"/></marker>
+<marker id="ad" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#B4531A"/></marker>
+</defs>
+<rect x="123.6" y="26" width="53.8" height="38" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="150.5" y="51" text-anchor="middle" font-size="16" fill="#1a2a3a">the</text>
+<line x1="182.4" y1="45.0" x2="198.4" y2="45.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#ae)"/>
+<rect x="203.4" y="26" width="53.8" height="38" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="230.4" y="51" text-anchor="middle" font-size="16" fill="#1a2a3a">cat</text>
+<line x1="262.3" y1="45.0" x2="278.3" y2="45.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#ae)"/>
+<rect x="283.3" y="26" width="72.4" height="38" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="319.5" y="51" text-anchor="middle" font-size="16" fill="#1a2a3a">drank</text>
+<line x1="360.7" y1="45.0" x2="376.7" y2="45.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#ae)"/>
+<rect x="381.7" y="26" width="53.8" height="38" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="408.6" y="51" text-anchor="middle" font-size="16" fill="#1a2a3a">the</text>
+<line x1="440.5" y1="45.0" x2="456.5" y2="45.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#ae)"/>
+<rect x="461.5" y="26" width="63.1" height="38" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="493.1" y="51" text-anchor="middle" font-size="16" fill="#1a2a3a">milk</text>
+<rect x="104.0" y="218" width="46" height="38" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="127.0" y="243" text-anchor="middle" font-size="16" fill="#1a2a3a">le</text>
+<line x1="155.0" y1="237.0" x2="171.0" y2="237.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#ad)"/>
+<rect x="176.0" y="218" width="63.1" height="38" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="207.6" y="243" text-anchor="middle" font-size="16" fill="#1a2a3a">chat</text>
+<line x1="244.1" y1="237.0" x2="260.1" y2="237.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#ad)"/>
+<rect x="265.1" y="218" width="46" height="38" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="288.1" y="243" text-anchor="middle" font-size="16" fill="#1a2a3a">a</text>
+<line x1="316.1" y1="237.0" x2="332.1" y2="237.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#ad)"/>
+<rect x="337.1" y="218" width="46" height="38" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="360.1" y="243" text-anchor="middle" font-size="16" fill="#1a2a3a">bu</text>
+<line x1="388.1" y1="237.0" x2="404.1" y2="237.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#ad)"/>
+<rect x="409.1" y="218" width="46" height="38" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="432.1" y="243" text-anchor="middle" font-size="16" fill="#1a2a3a">le</text>
+<line x1="460.1" y1="237.0" x2="476.1" y2="237.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#ad)"/>
+<rect x="481.1" y="218" width="63.1" height="38" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="512.7" y="243" text-anchor="middle" font-size="16" fill="#1a2a3a">lait</text>
+<text x="18" y="51" font-size="16" fill="#1F5CA8" font-weight="600">Encoder</text>
+<text x="18" y="243" font-size="16" fill="#B4531A" font-weight="600">Decoder</text>
+<rect x="185.8" y="122" width="276.6" height="40" rx="19" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<text x="324.1" y="148" text-anchor="middle" font-size="15" fill="#1a2a3a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">[0.1, -0.2, 0.8, 1.5, -0.3]</text>
+<text x="185.8" y="111" font-size="14" fill="currentColor" opacity="0.8">context vector</text>
+<path d="M 493.1 64 V 142.0 H 468.4" fill="none" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#ae)"/>
+<path d="M 179.8 142.0 H 127.0 V 212" fill="none" stroke="#B4531A" stroke-width="1.5" marker-end="url(#ad)"/>
+<text x="18" y="290" font-size="13" fill="currentColor" opacity="0.65">Everything the decoder knows about the source has to fit in that one vector.</text>
+</svg>
