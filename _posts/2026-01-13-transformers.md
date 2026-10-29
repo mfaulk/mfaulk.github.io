@@ -635,7 +635,7 @@ Because dropout behaves differently in training and evaluation, it matters that 
 
 ## The Feed-Forward Network
 
-Attention moves information between positions, but it does little to that information along the way. Once the weights are fixed, the output at each position is a weighted average of value vectors, which is a linear operation. The feed-forward sublayer is the other half of every block, and it is where the nonlinearity lives:
+Attention moves information between positions, but it does little to that information along the way. Once the weights are fixed, the output at each position is a weighted average of value vectors, which is a linear operation. The feed-forward sublayer is the other half of every block, and it supplies the nonlinearity:
 
 ```python
 self.ffn = nn.Sequential(
@@ -649,7 +649,7 @@ Two linear layers with an activation between them, projecting up to a wider dime
 
 It is applied *position-wise*: the same two matrices run over every position independently, with no mixing across the sequence. That is what makes the permutation argument from the positional embeddings section go through, and it means all cross-position communication in a transformer happens in exactly one place, the attention sublayer.
 
-This is also where most of the parameters are. Each block spends $2 \cdot d_{\text{model}} \cdot d_{ff}$ parameters on the feed-forward network against $4 \cdot d_{\text{model}}^2$ on the four attention projections, so at the usual $d_{ff} = 4 \cdot d_{\text{model}}$ the feed-forward network is twice the size of the attention it accompanies.
+Most of the parameters live here too. Each block spends $2 \cdot d_{\text{model}} \cdot d_{ff}$ parameters on the feed-forward network against $4 \cdot d_{\text{model}}^2$ on the four attention projections, so at the usual $d_{ff} = 4 \cdot d_{\text{model}}$ the feed-forward network is twice the size of the attention it accompanies.
 
 ## Encoder-Decoder
 
@@ -885,7 +885,7 @@ self.tgt_embed = nn.Embedding(tgt_vocab_size, d_model, padding_idx=PAD)
 
 `padding_idx` pins the row for `PAD` to zeros and keeps it from accumulating gradient, which pairs with the padding masks from earlier.
 
-The paper then scales the embeddings by $\sqrt{d_{\text{model}}}$ before the positional encoding is added. That scaling only makes sense alongside a particular initialization, and the two are easy to separate by accident. The paper initializes the embedding matrix the way it initializes a linear layer — entries with standard deviation around $d_{\text{model}}^{-1/2}$, small enough that the $O(1)$ sinusoids would otherwise swamp them — and the $\sqrt{d_{\text{model}}}$ multiply restores the token signal to unit scale. PyTorch's `nn.Embedding` does **not** initialize that way: its default is $\mathcal{N}(0, 1)$, so multiplying by $\sqrt{d_{\text{model}}}$ scales entries *up* by a factor of about 23 at $d_{\text{model}} = 512$, which is the opposite of the intent. Plenty of published implementations carry the multiply without the matching initialization. We set it explicitly so the two agree:
+The paper then scales the embeddings by $\sqrt{d_{\text{model}}}$ before the positional encoding is added. That scaling only makes sense alongside a particular initialization, and the two are easy to separate by accident. The paper initializes the embedding matrix the way it initializes a linear layer, with entries of standard deviation around $d_{\text{model}}^{-1/2}$. Those are small enough that the $O(1)$ sinusoids would otherwise swamp them, and the $\sqrt{d_{\text{model}}}$ multiply restores the token signal to unit scale. PyTorch's `nn.Embedding` does **not** initialize that way: its default is $\mathcal{N}(0, 1)$, so multiplying by $\sqrt{d_{\text{model}}}$ scales entries *up* by a factor of about 23 at $d_{\text{model}} = 512$, which is the opposite of the intent. Plenty of published implementations carry the multiply without the matching initialization. We set it explicitly so the two agree:
 
 ```python
 nn.init.normal_(self.src_embed.weight, mean=0.0, std=d_model ** -0.5)
@@ -895,7 +895,7 @@ with torch.no_grad():                       # padding_idx is zeroed at init, not
     self.tgt_embed.weight[PAD].zero_()
 ```
 
-This is not a nicety. On the toy task at the end of this post, leaving the default initialization in place while keeping the $\sqrt{d_{\text{model}}}$ multiply costs roughly an order of magnitude in final loss — 0.0985 against 0.0059 — and drops exact-match accuracy from 256/256 to 244/256.
+The difference is measurable. On the toy task at the end of this post, leaving the default initialization in place while keeping the $\sqrt{d_{\text{model}}}$ multiply costs roughly an order of magnitude in final loss, 0.0985 against 0.0059, and drops exact-match accuracy from 256/256 to 244/256.
 
 At the top of the model, one linear layer projects back to vocabulary size:
 
@@ -960,7 +960,7 @@ The blocks are held in an `nn.ModuleList` rather than a plain Python list, so th
 
 ## The Full Model
 
-With the pieces in place, the model is mostly wiring:
+The model itself is mostly wiring:
 
 ```python
 class Transformer(nn.Module):
@@ -1001,11 +1001,11 @@ class Transformer(nn.Module):
         return self.out_proj(dec_out)
 ```
 
-Note which mask goes where. `src_mask` hides source padding, and it is used twice: once in the encoder's self-attention, and again as the decoder's `cross_mask`, because the decoder is attending over those same source positions. `tgt_mask` is the causal mask over the target. `encode` and `decode` are split out rather than folded into `forward` because generation needs them separately — it encodes once and decodes repeatedly.
+Note which mask goes where. `src_mask` hides source padding, and it is used twice: once in the encoder's self-attention, and again as the decoder's `cross_mask`, because the decoder is attending over those same source positions. `tgt_mask` is the causal mask over the target. `encode` and `decode` are split out rather than folded into `forward` because generation needs them separately: it encodes once and decodes repeatedly.
 
 ## Training
 
-To check that all of this works, we need a task. Reversing a sequence is a good one: the model reads a string of random symbols and has to emit them backwards. It takes no data download and trains in minutes on a CPU, and unlike copying, it cannot be solved by learning to attend to the matching position — the decoder at step $t$ has to find source position $L - 1 - t$, which depends on the length of the particular source sequence. Getting it right means the cross-attention is genuinely aligning.
+To check that all of this works, we need a task. Reversing a sequence is a good one: the model reads a string of random symbols and has to emit them backwards. It takes no data download and trains in minutes on a CPU, and unlike copying, it cannot be solved by learning to attend to the matching position. The decoder at step $t$ has to find source position $L - 1 - t$, which depends on the length of the particular source sequence. Getting it right means the cross-attention is genuinely aligning.
 
 ```python
 def make_batch(batch_size: int, max_len: int, vocab_size: int, generator=None):
@@ -1026,7 +1026,7 @@ def make_batch(batch_size: int, max_len: int, vocab_size: int, generator=None):
     return src, tgt_in, tgt_out, lengths
 ```
 
-The two target tensors are the same sequence offset by one position, which is what makes the causal mask useful. `tgt_in` is what the decoder reads — `[BOS, y_1, ..., y_L]` — and `tgt_out` is what it should predict at each of those positions — `[y_1, ..., y_L, EOS]`. Feeding the decoder the correct prefix rather than its own previous guesses is called *teacher forcing*, and it is why training can process the whole target sequence in one parallel pass while generation has to go one step at a time. The causal mask is what keeps position $t$ from simply reading its own answer out of `tgt_in`.
+The two target tensors are the same sequence offset by one position, which is what makes the causal mask useful. `tgt_in` is what the decoder reads, `[BOS, y_1, ..., y_L]`, and `tgt_out` is what it should predict at each of those positions, `[y_1, ..., y_L, EOS]`. Feeding the decoder the correct prefix rather than its own previous guesses is called *teacher forcing*, and it is why training can process the whole target sequence in one parallel pass while generation has to go one step at a time. The causal mask is what keeps position $t$ from simply reading its own answer out of `tgt_in`.
 
 The paper's learning rate schedule raises the rate linearly for a fixed number of warmup steps and then decays it as the inverse square root:
 
@@ -1076,7 +1076,7 @@ for step in range(1, 6001):
         print(f"step {step:5d}  loss {loss.item():.4f}  lr {sched.get_last_lr()[0]:.2e}")
 ```
 
-`Adam` is constructed with `lr=1.0` because the schedule supplies the real scale — `LambdaLR` multiplies the base rate by `lr_lambda`, so a base of 1.0 makes the formula above the actual learning rate. `ignore_index=PAD` drops the padded target positions from the loss, which is the other half of the padding story: the mask keeps the model from attending to padding, and this keeps it from being graded on padding. And `clip_grad_norm_` guards against the occasional large gradient early in training.
+`Adam` is constructed with `lr=1.0` because the schedule supplies the real scale. `LambdaLR` multiplies the base rate by `lr_lambda`, so a base of 1.0 makes the formula above the actual learning rate. `ignore_index=PAD` drops the padded target positions from the loss, which is the other half of the padding story: the mask keeps the model from attending to padding, and this keeps it from being graded on padding. And `clip_grad_norm_` guards against the occasional large gradient early in training.
 
 Running it:
 
@@ -1114,7 +1114,7 @@ def greedy_decode(model, src, max_new_tokens: int, src_mask=None):
     return ys[:, 1:]
 ```
 
-This is where the `encode`/`decode` split pays off: the source is encoded once, outside the loop, and only the decoder runs per step. `model.eval()` matters too, since it switches off the dropout discussed earlier — sampling with dropout still active would inject noise into every step.
+This is where the `encode`/`decode` split pays off: the source is encoded once, outside the loop, and only the decoder runs per step. `model.eval()` matters too, since it switches off the dropout discussed earlier. Sampling with dropout still active would inject noise into every step.
 
 On 256 freshly sampled sequences, decoding greedily and comparing against the true reversal:
 
@@ -1150,7 +1150,7 @@ Going back to the diagram at the top of the post, every box in it now correspond
 | Softmax → Output Probabilities | left to `F.cross_entropy` or `argmax` | — |
 | $\mathcal{O}(n^2)$ | the $(B, H, T, S)$ score matrix above | — |
 
-The one arrow that is easy to lose track of is the long one from the top of the encoder across to the middle of the decoder. That is `enc_out`, computed once and read by the cross-attention sublayer of every decoder block — `model.encode(...)` in the code, passed into `model.decode(...)`.
+The one arrow that is easy to lose track of is the long one from the top of the encoder across to the middle of the decoder. That is `enc_out`, computed once and read by the cross-attention sublayer of every decoder block. In the code it is the result of `model.encode(...)`, passed into `model.decode(...)`.
 
 # References and Further Reading
 
