@@ -17,9 +17,13 @@ This section steps through the definition and implementation of each part of the
 - Scaled dot product attention
 - Multi-Head Attention
 - QKV projections
-- Layer norm / dropout
 - Positional embeddings
 - Masking
+- Layer norm / dropout
+- The feed-forward network
+- Embeddings and the output head
+- Stacking blocks into a full encoder-decoder model
+- Training it, and generating from it
 
 Before getting started, let's define some symbols for the dimensions involved, and import some things we'll use in the code snippets:
 
@@ -999,8 +1003,154 @@ class Transformer(nn.Module):
 
 Note which mask goes where. `src_mask` hides source padding, and it is used twice: once in the encoder's self-attention, and again as the decoder's `cross_mask`, because the decoder is attending over those same source positions. `tgt_mask` is the causal mask over the target. `encode` and `decode` are split out rather than folded into `forward` because generation needs them separately — it encodes once and decodes repeatedly.
 
+## Training
+
+To check that all of this works, we need a task. Reversing a sequence is a good one: the model reads a string of random symbols and has to emit them backwards. It takes no data download and trains in minutes on a CPU, and unlike copying, it cannot be solved by learning to attend to the matching position — the decoder at step $t$ has to find source position $L - 1 - t$, which depends on the length of the particular source sequence. Getting it right means the cross-attention is genuinely aligning.
+
+```python
+def make_batch(batch_size: int, max_len: int, vocab_size: int, generator=None):
+    """Random symbol sequences paired with their reversal."""
+    lengths = torch.randint(3, max_len + 1, (batch_size,), generator=generator)
+    src = torch.full((batch_size, max_len), PAD, dtype=torch.long)
+    tgt_in = torch.full((batch_size, max_len + 1), PAD, dtype=torch.long)
+    tgt_out = torch.full((batch_size, max_len + 1), PAD, dtype=torch.long)
+
+    for b, L in enumerate(lengths.tolist()):
+        seq = torch.randint(3, vocab_size, (L,), generator=generator)
+        rev = torch.flip(seq, dims=[0])
+        src[b, :L] = seq
+        tgt_in[b, 0] = BOS
+        tgt_in[b, 1:L + 1] = rev
+        tgt_out[b, :L] = rev
+        tgt_out[b, L] = EOS
+    return src, tgt_in, tgt_out, lengths
+```
+
+The two target tensors are the same sequence offset by one position, which is what makes the causal mask useful. `tgt_in` is what the decoder reads — `[BOS, y_1, ..., y_L]` — and `tgt_out` is what it should predict at each of those positions — `[y_1, ..., y_L, EOS]`. Feeding the decoder the correct prefix rather than its own previous guesses is called *teacher forcing*, and it is why training can process the whole target sequence in one parallel pass while generation has to go one step at a time. The causal mask is what keeps position $t$ from simply reading its own answer out of `tgt_in`.
+
+The paper's learning rate schedule raises the rate linearly for a fixed number of warmup steps and then decays it as the inverse square root:
+
+$$
+\text{lr}(s) = d_{\text{model}}^{-0.5} \cdot \min\!\left(s^{-0.5},\; s \cdot \text{warmup}^{-1.5}\right)
+$$
+
+```python
+def lr_lambda(step: int, d_model: int, warmup: int) -> float:
+    step = max(step, 1)
+    return (d_model ** -0.5) * min(step ** -0.5, step * warmup ** -1.5)
+```
+
+The warmup matters. Early in training the attention weights are close to uniform and the gradients are poorly conditioned, so a large step at that point can push the model somewhere it does not recover from. This is the "careful learning-rate warmup" mentioned back in the note on post-norm, and pre-norm models tolerate its absence much better than post-norm models do.
+
+The loop itself is ordinary supervised training:
+
+```python
+torch.manual_seed(0)
+VOCAB, MAXLEN = 12, 8
+model = Transformer(VOCAB, VOCAB, d_model=128, num_heads=4, d_ff=512, num_layers=2)
+print("parameters:", sum(p.numel() for p in model.parameters()))
+
+opt = torch.optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
+sched = torch.optim.lr_scheduler.LambdaLR(
+    opt, lambda s: lr_lambda(s, model.d_model, warmup=400)
+)
+
+model.train()
+for step in range(1, 6001):
+    src, tgt_in, tgt_out, lengths = make_batch(64, MAXLEN, VOCAB)
+    src_mask = padding_mask(lengths, src.size(1))
+    tgt_mask = causal_mask(tgt_in.size(1))
+
+    logits = model(src, tgt_in, src_mask=src_mask, tgt_mask=tgt_mask)
+    loss = F.cross_entropy(
+        logits.reshape(-1, VOCAB), tgt_out.reshape(-1), ignore_index=PAD
+    )
+
+    opt.zero_grad()
+    loss.backward()
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+    opt.step()
+    sched.step()
+
+    if step % 1000 == 0:
+        print(f"step {step:5d}  loss {loss.item():.4f}  lr {sched.get_last_lr()[0]:.2e}")
+```
+
+`Adam` is constructed with `lr=1.0` because the schedule supplies the real scale — `LambdaLR` multiplies the base rate by `lr_lambda`, so a base of 1.0 makes the formula above the actual learning rate. `ignore_index=PAD` drops the padded target positions from the loss, which is the other half of the padding story: the mask keeps the model from attending to padding, and this keeps it from being graded on padding. And `clip_grad_norm_` guards against the occasional large gradient early in training.
+
+Running it:
+
+```
+parameters: 930828
+step  1000  loss 0.0723  lr 2.80e-03
+step  2000  loss 0.0805  lr 1.98e-03
+step  3000  loss 0.0070  lr 1.61e-03
+step  4000  loss 0.0018  lr 1.40e-03
+step  5000  loss 0.0017  lr 1.25e-03
+step  6000  loss 0.0059  lr 1.14e-03
+```
+
+## Generation
+
+Training ran the whole target sequence through the decoder at once. Generation cannot: there is no target to feed in, so the model has to produce one symbol at a time and consume what it has already produced. Starting from `BOS`, take the logits at the last position, pick the most likely symbol, append it, and repeat:
+
+```python
+@torch.no_grad()
+def greedy_decode(model, src, max_new_tokens: int, src_mask=None):
+    model.eval()
+    enc_out = model.encode(src, src_mask=src_mask)
+
+    ys = torch.full((src.size(0), 1), BOS, dtype=torch.long, device=src.device)
+    for _ in range(max_new_tokens):
+        T = ys.size(1)
+        dec_out = model.decode(
+            ys, enc_out,
+            self_mask=causal_mask(T, device=src.device),
+            cross_mask=src_mask,
+        )
+        logits = model.out_proj(dec_out)
+        next_token = logits[:, -1].argmax(dim=-1, keepdim=True)
+        ys = torch.cat([ys, next_token], dim=1)
+    return ys[:, 1:]
+```
+
+This is where the `encode`/`decode` split pays off: the source is encoded once, outside the loop, and only the decoder runs per step. `model.eval()` matters too, since it switches off the dropout discussed earlier — sampling with dropout still active would inject noise into every step.
+
+On 256 freshly sampled sequences, decoding greedily and comparing against the true reversal:
+
+```
+exact-match on 256 sequences: 256/256
+source : [3, 11, 7]
+target : [7, 11, 3]
+decoded: [7, 11, 3]
+```
+
+Every sequence comes back exactly right, which is enough to say the implementation works end to end: the encoder is building useful representations, the cross-attention is finding the right source position for each output step, and the causal mask is holding.
+
+This loop is also slower than it needs to be, which is why no production implementation writes it quite this way. Each pass through the loop re-runs the decoder over the entire prefix, recomputing keys and values for positions that have not changed. Generating $n$ tokens therefore costs $O(n^2)$ decoder work on top of the $O(n^2)$ already inside attention. The standard fix is a *KV cache*: keep each layer's keys and values from previous steps and compute only the new position's row. That changes no mathematics, only bookkeeping, which is why it is left out here.
+
 ## Detailed Recap
-Revisit the diagram at the start of the post in more detail. This could show the dimensions of matrices, einsums, etc.
+
+Going back to the diagram at the top of the post, every box in it now corresponds to something concrete. Writing $B$ for batch, $T$ for target length, $S$ for source length, $H$ for heads, and $d$ for `d_model`:
+
+| In the diagram | In the code | Shape out |
+| --- | --- | --- |
+| Input / Output Embedding | `nn.Embedding(vocab, d)`, scaled by $\sqrt{d}$ | $(B, T, d)$ |
+| Positional Embedding ⊕ | `PositionalEncoding` | $(B, T, d)$ |
+| Linear ×3 (Q, K, V) | `W_q`, `W_k`, `W_v`, then `_split_heads` | $(B, H, T, d/H)$ |
+| MatMul → Scale → Softmax | `scaled_dot_product_attention` | $(B, H, T, S)$ weights |
+| MatMul (with V) | same function, `torch.matmul(attn, V)` | $(B, H, T, d/H)$ |
+| Concatenate → Linear | `_combine_heads`, then `W_o` | $(B, T, d)$ |
+| Masked Multi-Head Self-Attention | `MultiHeadAttention` with `causal_mask` | $(B, T, d)$ |
+| Multi-Head Cross-Attention | same module, `x_k=enc_out` | $(B, T, d)$ |
+| Feed Forward | `self.ffn`, widening to $d_{ff}$ and back | $(B, T, d)$ |
+| Add & Norm | residual `x + dropout(sublayer)` and `nn.LayerNorm` | $(B, T, d)$ |
+| N× | `Encoder` / `Decoder` holding an `nn.ModuleList` | $(B, T, d)$ |
+| Linear (output) | `out_proj` | $(B, T, \text{vocab})$ |
+| Softmax → Output Probabilities | left to `F.cross_entropy` or `argmax` | — |
+| $\mathcal{O}(n^2)$ | the $(B, H, T, S)$ score matrix above | — |
+
+The one arrow that is easy to lose track of is the long one from the top of the encoder across to the middle of the decoder. That is `enc_out`, computed once and read by the cross-attention sublayer of every decoder block — `model.encode(...)` in the code, passed into `model.decode(...)`.
 
 # References and Further Reading
 
