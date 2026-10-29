@@ -1040,7 +1040,7 @@ def lr_lambda(step: int, d_model: int, warmup: int) -> float:
     return (d_model ** -0.5) * min(step ** -0.5, step * warmup ** -1.5)
 ```
 
-The warmup matters. Early in training the attention weights are close to uniform and the gradients are poorly conditioned, so a large step at that point can push the model somewhere it does not recover from. This is the "careful learning-rate warmup" mentioned back in the note on post-norm, and pre-norm models tolerate its absence much better than post-norm models do.
+Early in training the attention weights are close to uniform and the gradients are poorly conditioned, so a large step at that point can push the model somewhere it does not recover from. This is the "careful learning-rate warmup" mentioned back in the note on post-norm, and pre-norm models tolerate its absence much better than post-norm models do.
 
 The loop itself is ordinary supervised training:
 
@@ -1114,7 +1114,7 @@ def greedy_decode(model, src, max_new_tokens: int, src_mask=None):
     return ys[:, 1:]
 ```
 
-This is where the `encode`/`decode` split pays off: the source is encoded once, outside the loop, and only the decoder runs per step. `model.eval()` matters too, since it switches off the dropout discussed earlier. Sampling with dropout still active would inject noise into every step.
+The source is encoded once, outside the loop, and only the decoder runs per step. `model.eval()` switches off the dropout discussed earlier, which would otherwise inject noise into every step.
 
 On 256 freshly sampled sequences, decoding greedily and comparing against the true reversal:
 
@@ -1125,9 +1125,9 @@ target : [7, 11, 3]
 decoded: [7, 11, 3]
 ```
 
-Every sequence comes back exactly right, which is enough to say the implementation works end to end: the encoder is building useful representations, the cross-attention is finding the right source position for each output step, and the causal mask is holding.
+All 256 decode correctly. That is the result the task was chosen for: reversal cannot be produced without the cross-attention locating source position $L - 1 - t$ at each step.
 
-This loop is also slower than it needs to be, which is why no production implementation writes it quite this way. Each pass through the loop re-runs the decoder over the entire prefix, recomputing keys and values for positions that have not changed. Generating $n$ tokens therefore costs $O(n^2)$ decoder work on top of the $O(n^2)$ already inside attention. The standard fix is a *KV cache*: keep each layer's keys and values from previous steps and compute only the new position's row. That changes no mathematics, only bookkeeping, which is why it is left out here.
+This loop is also naive, and slower than it needs to be. Each pass through the loop re-runs the decoder over the entire prefix, recomputing keys and values for positions that have not changed. Generating $n$ tokens therefore costs $O(n^2)$ decoder work on top of the $O(n^2)$ already inside attention. The standard fix is a *KV cache*: keep each layer's keys and values from previous steps and compute only the new position's row. That changes no mathematics, only bookkeeping, which is why it is left out here.
 
 ## Detailed Recap
 
