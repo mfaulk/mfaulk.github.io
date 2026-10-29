@@ -483,8 +483,8 @@ Where did these matrices come from? They're learned jointly with the rest of the
 Meta-lesson: Attention assumes that a useful notion of relevance exists, then learns it into existence.
 
 <figure style="text-align: center;">
-  <img src="/assets/images/qkv-projections.svg" alt="A single input matrix X feeds three separate learned projection matrices W_q, W_k and W_v, each producing one of the queries, keys and values." style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Queries, keys, and values are three projections of the same input. Nothing in <em>X</em> marks a row as a query or a key — the difference is entirely in the learned matrices.</figcaption>
+  <img src="/assets/images/qkv-projections.svg" alt="The words How, are, you, doing and the question mark become rows of an embedding matrix X, which feeds three separate learned projection matrices W_q, W_k and W_v, each producing one of the queries, keys and values." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Each word becomes a row of the embedding matrix <em>X</em>, and queries, keys, and values are three projections of it. Nothing in <em>X</em> marks a row as a query or a key: the difference is entirely in the learned matrices.</figcaption>
 </figure>
 
 
