@@ -75,7 +75,7 @@ At its core, *attention is a method for computing a weighted average over a set 
 
 <figure style="text-align: center;">
   <img src="/assets/images/dot-product-attention.png" alt="Dot product attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Dot product attention. Image credit: unknown (TODO: identify source or redraw)</figcaption>
+  <figcaption>Dot product attention. <a href="https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial6/Transformers_and_MHAttention.html">Image credit</a>: Phillip Lippe, UvA Deep Learning Tutorials, "Tutorial 6: Transformers and Multi-Head Attention"</figcaption>
 </figure>
 
 ## Scaled Dot Product Attention
@@ -466,7 +466,7 @@ Meta-lesson: Attention assumes that a useful notion of relevance exists, then le
 
 <figure style="text-align: center;">
   <img src="/assets/images/transformer-encoder-and-decoder-architectures.png" alt="Encoder-Decoder Architectures" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Encoder-Decoder Architectures. Image credit: unknown (TODO: identify source or redraw)</figcaption>
+  <figcaption>Encoder-Decoder Architectures. <a href="https://towardsdatascience.com/a-complete-guide-to-bert-with-code-9f87602e4a11/">Image credit</a>: Bradney Smith, "A Complete Guide to BERT with Code", adapted from the architecture diagram in <em>Attention Is All You Need</em></figcaption>
 </figure>
 
 
