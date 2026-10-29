@@ -485,7 +485,7 @@ $$
 
 Each pair of dimensions holds one sinusoid, and the wavelengths run from $2\pi$ in the lowest pair up to $10000 \cdot 2\pi$ in the highest. Low dimensions oscillate quickly and distinguish neighboring positions; high dimensions oscillate slowly and distinguish regions of a long sequence.
 
-Three properties make this a reasonable choice over, say, feeding the raw index $t$ as a feature. The values stay in $[-1, 1]$ regardless of sequence length, so they do not swamp the embedding they are added to. The encoding has no parameters and is defined for every $t$, so a model can be run on sequences longer than any it saw in training. And for any fixed offset $k$, the angle-addition identities make $\text{PE}_{t+k}$ a linear function of $\text{PE}_t$ — a rotation by an angle that depends only on $k$, not on $t$. The paper hypothesized that this is what lets the model learn to attend by relative position.
+Why sinusoids, rather than feeding the raw index $t$ as a feature? The values stay in $[-1, 1]$ regardless of sequence length, so they do not swamp the embedding they are added to. The encoding has no parameters and is defined for every $t$, so a model can be run on sequences longer than any it saw in training. And for any fixed offset $k$, the angle-addition identities make $\text{PE}_{t+k}$ a linear function of $\text{PE}_t$ — a rotation by an angle that depends only on $k$, not on $t$. The paper hypothesized that this is what lets the model learn to attend by relative position.
 
 In code:
 
@@ -542,7 +542,55 @@ class PositionalEncoding(nn.Module):
 
 The encoding is added to the embeddings rather than concatenated, which costs no extra dimensions and lets every layer above see position information mixed into the same $d_{\text{model}}$ channels.
 
-Two alternatives are worth knowing. Learned absolute embeddings replace the table with an `nn.Embedding(max_len, d_model)` trained like any other parameter — simpler to state, and used by BERT and GPT-2, but defined only up to `max_len`. Rotary position embeddings (RoPE) take a different route: instead of adding anything to the input, they rotate the query and key vectors inside each attention operation by an angle proportional to position, so the dot product between a query and a key depends directly on their separation. RoPE is the common choice in current large language models.
+Learned absolute embeddings replace the table with an `nn.Embedding(max_len, d_model)` trained like any other parameter — simpler to state, and used by BERT and GPT-2, but defined only up to `max_len`. Rotary position embeddings (RoPE) take a different route: instead of adding anything to the input, they rotate the query and key vectors inside each attention operation by an angle proportional to position, so the dot product between a query and a key depends directly on their separation. RoPE is the common choice in current large language models.
+
+## Masking
+
+Attention lets every query see every key, which is sometimes more than we want.
+
+A decoder generates one element at a time, and the representation it builds for position $t$ must depend only on positions $1 \dots t$. If position $t$ could attend to position $t+1$ during training, the model would learn to read the answer off the input, and training would not match generation, where later positions do not exist yet.
+
+Padding is the other case. Sequences in a batch rarely have the same length, so shorter ones are padded to a common $T$. Those padding slots hold no content, and a query that attends to them is averaging in noise.
+
+Both are handled the same way: before the softmax, set the scores of disallowed query-key pairs to $-\infty$. The softmax maps $-\infty$ to a weight of exactly zero, so those keys contribute nothing to the weighted average and receive no gradient. This is what the `mask` branch in `scaled_dot_product_attention` does, with a boolean mask marking which pairs are allowed.
+
+The mask only has to be broadcastable to `(B, H, T_q, T_k)`, which keeps both kinds cheap. A causal mask does not depend on the batch or the head, so it is built once at `(1, 1, T, T)`. A padding mask depends on the batch but applies to every head and every query, so it is `(B, 1, 1, T_k)`:
+
+```python
+def causal_mask(T: int, device: Optional[torch.device] = None) -> torch.Tensor:
+    """
+    Allow each query to attend to itself and to earlier keys only.
+
+    Returns a (1, 1, T, T) boolean mask, broadcastable over batch and heads.
+    """
+    allowed = torch.ones(T, T, dtype=torch.bool, device=device).tril()
+    return allowed.view(1, 1, T, T)
+
+
+def padding_mask(lengths: torch.Tensor, T_k: int) -> torch.Tensor:
+    """
+    Block key positions that are padding rather than content.
+
+    Args:
+        lengths: (B,) number of real elements in each sequence of the batch.
+        T_k: Padded key-sequence length.
+
+    Returns a (B, 1, 1, T_k) boolean mask, broadcastable over heads and queries.
+    """
+    idx = torch.arange(T_k, device=lengths.device)         # (T_k,)
+    allowed = idx.unsqueeze(0) < lengths.unsqueeze(1)      # (B, T_k)
+    return allowed.view(lengths.size(0), 1, 1, T_k)
+```
+
+Both follow the convention the attention code already expects: `True` means "attend to this", `False` means "mask it out". Because they are booleans, combining them is just a logical `and`, and broadcasting produces the `(B, 1, T, T)` mask a decoder needs:
+
+```python
+mask = causal_mask(T, device=x.device) & padding_mask(lengths, T)
+```
+
+The three masks in the encoder-decoder blocks below follow from this. The encoder masks only padding, since an encoder is free to look at the whole source sequence in both directions. The decoder's `self_mask` is causal, combined with padding if the target is batched. The decoder's `cross_mask` is padding over the *source* keys and is not causal — there is no reason to hide part of the input from the decoder, only part of the output.
+
+Caveat: If a query row is masked out entirely, every score in that row is $-\infty$, and the softmax over them is $0/0$. The result is `NaN`, which then spreads through the rest of the network. This happens when a padding mask is applied along the query axis as well as the key axis, so that padded *queries* have nothing left to attend to. The usual fix is to leave the query axis unmasked, as `padding_mask` above does, and drop the padded positions later when computing the loss.
 
 ## Encoder-Decoder
 
