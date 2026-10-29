@@ -150,6 +150,8 @@ $$
 
 The matrix multiplication $QK^T$ performs the dot product for every possible pair of queries and keys, resulting in a matrix of shape $T \times T$.
 
+That $T \times T$ matrix is the cost of giving up recurrence, and it is the $\mathcal{O}(n^2)$ annotation in the diagram at the top of this post. An RNN processes a sequence in time linear in its length but cannot parallelize across it; attention parallelizes completely but computes and stores a score for every pair of positions. Doubling the sequence length quadruples both the work and the memory, which is why context length is the expensive dimension to scale and why a long line of later work — sparse, linear, and flash attention among it — is concerned with computing this matrix without materializing all of it.
+
 In the special case where the queries, keys, and values all come from the same sequence, we call this *self-attention*. 
 Self-attention allows every element in a sequence to attend to every other element, including itself. This means that each element’s representation is updated based on a weighted combination of all elements in the sequence, where the weights reflect their relevance to that element.
 
@@ -626,6 +628,24 @@ Dropout zeroes each element of a tensor independently with probability $p$ durin
 The first two are what Vaswani et al. describe; dropout on the attention weights comes from the reference implementations and is now standard. The base model in the paper used $p = 0.1$ in all of them.
 
 Because dropout behaves differently in training and evaluation, it matters that the blocks hold `nn.Dropout` modules rather than calling `F.dropout` directly. `model.eval()` switches a module off automatically, while the functional form needs its `training` flag supplied by the caller — which is why `scaled_dot_product_attention` takes one and `MultiHeadAttention` passes `training=self.training` down to it.
+
+## The Feed-Forward Network
+
+Attention moves information between positions, but it does little to that information along the way. Once the weights are fixed, the output at each position is a weighted average of value vectors, which is a linear operation. The feed-forward sublayer is the other half of every block, and it is where the nonlinearity lives:
+
+```python
+self.ffn = nn.Sequential(
+    nn.Linear(d_model, d_ff, bias=bias),
+    nn.GELU() if activation.lower() == "gelu" else nn.ReLU(),
+    nn.Linear(d_ff, d_model, bias=bias),
+)
+```
+
+Two linear layers with an activation between them, projecting up to a wider dimension $d_{ff}$ and back down. The paper used $d_{ff} = 4 \cdot d_{\text{model}}$ — 2048 against a model dimension of 512 — and the ratio has stuck.
+
+It is applied *position-wise*: the same two matrices run over every position independently, with no mixing across the sequence. That is what makes the permutation argument from the positional embeddings section go through, and it means all cross-position communication in a transformer happens in exactly one place, the attention sublayer.
+
+This is also where most of the parameters are. Each block spends $2 \cdot d_{\text{model}} \cdot d_{ff}$ parameters on the feed-forward network against $4 \cdot d_{\text{model}}^2$ on the four attention projections, so at the usual $d_{ff} = 4 \cdot d_{\text{model}}$ the feed-forward network is twice the size of the attention it accompanies.
 
 ## Encoder-Decoder
 
