@@ -23,11 +23,39 @@ Pinned versions actually used for the post are recorded in `requirements.txt`.
 | --- | --- | --- |
 | `check_env.py` | Verifies the GPU is usable and prints driver/runtime/package versions | required |
 | `verify_tokenizer.py` | Prints the tokenizer and chat-template facts the post asserts, read off the published tokenizers | no |
+| `base_probes.py` | Experiments A–H: continuation, few-shot, perplexity, stopping rate, format compliance | required |
 
 Run them with the venv's interpreter:
 
     ~/.venvs/olmo-sft/bin/python tools/olmo-sft/check_env.py
     ~/.venvs/olmo-sft/bin/python tools/olmo-sft/verify_tokenizer.py
+    ~/.venvs/olmo-sft/bin/python tools/olmo-sft/base_probes.py --model allenai/OLMo-2-0425-1B
+
+`base_probes.py` takes `--model`, `--adapter`, and `--chat`, so the identical
+prompts and scoring run against the base checkpoint, the official SFT
+checkpoint, and our own fine-tune:
+
+    # base: no chat template exists, so prompts go in raw
+    base_probes.py --model allenai/OLMo-2-0425-1B
+    # official SFT: must be prompted through its template
+    base_probes.py --model allenai/OLMo-2-0425-1B-SFT --chat
+    # ours: base weights + adapter, borrowing the SFT tokenizer's template
+    base_probes.py --model allenai/OLMo-2-0425-1B --adapter out/lora \
+                   --tokenizer allenai/OLMo-2-0425-1B-SFT --chat
+
+Sampling is fixed in the script (greedy for single answers; `T=0.7`,
+`top_p=0.9`, seeds 0–7 for distributions) rather than passed in, so the three
+runs cannot accidentally differ in how they sample.
+
+### Base checkpoint results
+
+Recorded here so a rerun can be checked against them:
+
+| Measure | `OLMo-2-0425-1B` |
+| --- | --- |
+| Stopping rate (G) | 13/48 = 27.1% |
+| Format compliance (H) | 9/64 = 14.1% |
+| Perplexity, 169 tokens of ordinary prose | 9.19 |
 
 ## Hardware this was developed on
 

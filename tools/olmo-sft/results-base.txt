@@ -1,0 +1,141 @@
+model      allenai/OLMo-2-0425-1B
+adapter    None
+chat       False (template present: False)
+sampling   greedy for single answers; T=0.7 top_p=0.9 for seeded runs
+
+========================================================================
+B - code completion (greedy, 120 tokens)
+========================================================================
+    return [x / window for x in xs]
+
+
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given window size."""
+    return [x / window for x in xs]
+
+
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given window size."""
+    return [x / window for x in xs]
+
+
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given
+
+[stopped on its own: False]
+[unrequested extra 'def' blocks: 3]
+
+========================================================================
+C - few-shot: English to French (greedy, 20 tokens)
+========================================================================
+' les enfants jouent dans la jardine\n\nEnglish: the children are playing in the garden\n'
+
+========================================================================
+C - few-shot: text to JSON (greedy, 40 tokens)
+========================================================================
+' {"name": "Katherine Johnson", "born": 1918}\n\nText: name: John Glenn, born: 1921\nJSON: {"name": "John Glenn", "born":'
+[valid JSON object in output: True]
+
+========================================================================
+D - perplexity
+========================================================================
+     213.10   prose written after the model's cutoff
+    2262.77   the same words, shuffled
+      34.57   repeated token
+
+========================================================================
+E - bare instruction, 8 seeds (T=0.7, 60 tokens)
+========================================================================
+  seed 0 stop=False It should be about how recursion is used to solve a problem. Your haiku should include a reference to the "recursion" word and it should be a haiku, n
+  seed 1 stop=False A haiku is a poem of seventeen syllables, with five syllables in the first line, seven in the second, and five in the third.  Write a haiku about recu
+  seed 2 stop=False You must use the word "recursive" at least once in / your haiku. /  / The following is an example of a haiku written by a computer scientist: /  /    
+  seed 3 stop=False You must use the word "recursion" and "recursive" in your haiku. You can also use the word "loops" in your haiku. You can write your haiku in the comm
+  seed 4 stop=False I will be impressed. You must be good. I will read it. I will like it. I will read it again. I will read it again and again. I will read it until I ha
+  seed 5 stop=False The haiku should be between 3 and 5 lines long. /  / The haiku is a Japanese form of poetry that is 3 to 5 lines long. The haiku consists of three lin
+  seed 6 stop=False If you are not familiar with the format, it is a Japanese poetry form of 5-7-5 syllables. For a more in-depth explanation of how to write a haiku, che
+  seed 7 stop=False The haiku must be 5-7-5 syllables in length, with the first and last lines being the same length. The second line must be different from the first. Yo
+
+========================================================================
+F - the same instruction, scaffolded (greedy, 60 tokens)
+========================================================================
+
+-- Q/A framing (stop=True) --
+recursion is a function that calls itself
+Q: Write a haiku about a computer.
+A: computer is a machine that computes
+Q: Write a haiku about a computer.
+A: computer is a machine that computes
+
+-- document framing (stop=False) --
+The following is a haiku about recursion.
+
+The following is a haiku about recursion.
+
+The following is a haiku about recursion.
+
+The following is a haiku about recursion.
+
+The following is a haiku about recursion.
+
+The following is a haiku about recursion.
+
+The following is a haiku
+
+-- one-shot (stop=False) --
+recursion is a loop
+that never ends
+the recursion is infinite
+
+Q: Write a haiku about a tree.
+A: a tree is a tree
+it's a tree, it's a tree
+it's a tree, it's a tree
+
+Q: Write a haiku about a
+
+========================================================================
+G - stopping rate (6 prompts x 8 seeds, 100 tokens)
+========================================================================
+  0/8  Write a haiku about recursion.
+  0/8  Explain what a hash table is.
+  0/8  List three uses for a paperclip.
+  3/8  What is the capital of France?
+  8/8  Summarize the plot of Hamlet in one sentence.
+  2/8  Give me a recipe for pancakes.
+
+  STOPPING RATE: 13/48 = 27.1%
+
+========================================================================
+H - format compliance (8 tasks x 8 seeds, 80 tokens)
+========================================================================
+  0/8  [one_word] What is the capital of France? Answer in exactly one word.
+  0/8  [one_word] What color is a ripe banana? Answer in exactly one word.
+  0/8  [one_word] How many legs does a spider have? Answer in exactly one word.
+  3/8  [json] Give me the name and year of birth of Ada Lovelace as JSON with 
+  1/8  [json] Give me the capital and population of France as JSON with keys "
+  0/8  [bullets] List exactly three primary colors, as three bullet points starti
+  0/8  [bullets] List exactly three planets, as three bullet points starting with
+  5/8  [no_commas] Describe the ocean in one sentence without using any commas.
+
+  one_word   0/24 = 0.0%
+  json       4/16 = 25.0%
+  bullets    0/16 = 0.0%
+  no_commas  5/8 = 62.5%
+
+  FORMAT COMPLIANCE: 9/64 = 14.1%
+
+========================================================================
+one example of each format task's raw output (greedy)
+========================================================================
+
+-- [one_word] What is the capital of France? Answer in exactly one word.
+   'Paris. What is the capital of the United States? Washington, D.C. What is the capital of the United Kingdom? London. What is the capital of Canada? Ottawa. What is the capital of Australia? Canberra. What is the capital of New Zealand? Wellington. What is the capital of Ireland? Dublin. What is the '
+
+-- [one_word] What color is a ripe banana? Answer in exactly one word.
+   'The answer is yellow. The question is a trick question. A ripe banana is yellow, but it is not yellow. It is brown. The brown color of a ripe banana is caused by the presence of a chemical called melanin. Melanin is a pigment that gives color to the skin. It is also found in the eyes, hair, and othe'
+
+-- [one_word] How many legs does a spider have? Answer in exactly one word.
+   '1. A spider has 8 legs. 2. A spider has 8 legs. 3. A spider has 8 legs. 4. A spider has 8 legs. 5. A spider has 8 legs. 6. A spider has 8 legs. 7. A spider has 8 legs. 8. A spider has 8 legs.'
+
+-- [json] Give me the name and year of birth of Ada Lovelace as JSON with keys "
+   ''

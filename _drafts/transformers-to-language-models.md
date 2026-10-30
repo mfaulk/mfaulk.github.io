@@ -22,7 +22,9 @@ Like the previous post, this one stays close to its sources. Three papers carry 
 
 **Scope.** The hands-on training experiment in this post is supervised instruction tuning (SFT) only. Pretraining, preference optimization, and reinforcement learning are sketched at the end and left to later posts.
 
-**One framing to be careful about.** It is common to read that base models "can't answer questions" or "just autocomplete." That is misleading, and GPT-2 is the paper that says why. A pretrained base model is an extremely capable next-token predictor, and with the right prompt it will answer questions and write working code. What instruction tuning changes is the *reliability of form*: whether the model treats its input as a request to be fulfilled rather than a document to be continued, whether it stops when it is done, and whether it does these things without prompt engineering. That is a real and valuable change, and it is a smaller change than it is usually described as.
+**One framing to be careful about.** It is common to read that base models "can't answer questions" or "just autocomplete." That is misleading, and GPT-2 is the paper that says why. A pretrained base model is a capable next-token predictor that already holds the knowledge and much of the task ability we care about, and with the right prompt a good deal of it can be reached. What instruction tuning changes is the *reliability of form*: whether the model treats its input as a request to be fulfilled rather than a document to be continued, whether it stops when it is done, and whether it does these things without prompt engineering. That is a real and valuable change, and it is a smaller change than it is usually described as.
+
+It is also, as the measurements later will show, not a change that makes a small model good at things it was bad at. Keeping those two claims apart is most of the work of writing this post honestly.
 
 ---
 
@@ -624,9 +626,10 @@ One last discrepancy worth resolving, since we just counted parameters with it. 
 
 ## What the Base Model Can and Cannot Do
 
-> **Status: one result in, the rest unrun.** The generation quoted below is real output
-> from the real checkpoint. Everything still marked `TODO` has not been run, and nothing
-> here is invented or guessed.
+> **Status: run.** Every generation and number in this section is real output from
+> `allenai/OLMo-2-0425-1B`, produced by `tools/olmo-sft/base_probes.py`. Two of the
+> results contradict what I expected before running them, and those are flagged where
+> they occur.
 
 There is one more fact about the base checkpoint that is more telling than anything in its config file:
 
@@ -637,7 +640,12 @@ True
 
 The SFT checkpoint has one. The base checkpoint does not. There is no notion of a user, an assistant, or a turn anywhere in the base model's interface, because nothing in pretraining put one there. It is a document continuation engine, and the only thing you can hand it is a prefix.
 
-The experiments below are designed to find out what that is and is not good for. Sampling is a confound in every base-versus-tuned comparison, so the parameters are fixed once here and reused for every generation in the rest of the post: **TODO(decide)** temperature, top-$p$, `max_new_tokens`, and seed.
+The experiments below are designed to find out what that is and is not good for. Sampling is a confound in every base-versus-tuned comparison, so the parameters are fixed once here and reused for every generation in the rest of the post. There are exactly two configurations:
+
+- **Greedy** (`do_sample=False`) where a single reproducible answer is wanted.
+- **Sampled** at $T = 0.7$, top-$p = 0.9$, over seeds $0 \dots 7$, where the question is about the *distribution* of behaviors rather than one of them.
+
+`max_new_tokens` is stated per experiment. Everything else is the library default.
 
 ### It is a very good next-token predictor
 
@@ -649,17 +657,148 @@ Everything the framing at the top of this post promised is visible in three sent
 
 Not one of those failures is a knowledge failure. They are all the same failure: this is a model continuing a document, and a document about France plausibly contains more sentences about France, so it produces more sentences about France until something stops it.
 
-**TODO(run):** the designed version of this experiment — several prefixes of real prose rather than one lead-in, under the fixed sampling parameters above, reported untruncated.
-- **Experiment B — code completion.** A Python signature and docstring. This is chosen as a task the base model should do *well*, because code completion is continuation. **TODO(run)** — and check whether it continues past the requested function into a second, unrequested one. That would be correct document behavior and unhelpful assistant behavior at the same time.
-- **Experiment C — few-shot prompting.** Three worked examples of a mapping, then a fourth input, as in GPT-2 §2. **TODO(run).** This is the experiment that makes the capability claim concrete: no gradients, no fine-tuning, pattern continued.
-- **Experiment D — perplexity on held-out text.** A number rather than a vibe, and a baseline for the evaluation section. **TODO(run).**
+**Experiment B — code completion.** A signature and a docstring, greedy, 120 tokens. I picked this expecting the base model to do *well*, on the reasoning that code completion is pure continuation and therefore the home turf of a next-token predictor. That expectation was wrong, and it is worth showing the failure rather than quietly choosing a different example:
+
+```python
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given window size."""
+    return [x / window for x in xs]
+
+
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given window size."""
+    return [x / window for x in xs]
+# ... and twice more, verbatim, until the token budget runs out
+```
+
+Two separate things are going wrong, and they need separating. The verbatim repetition is a greedy-decoding artifact — the known failure mode that motivated introducing temperature and top-$p$ earlier. Sampling at $T = 0.7$ eliminates it. But the body is still wrong at every seed: `[x / window for x in xs]` divides each element by the window size, which is not a moving average, and the sampled attempts are no better (`np.mean(xs, axis=0)[window: len(xs)]`). What sampling reveals instead is that the model drifts into *plausible sibling functions it was never asked for*:
+
+```python
+    return np.mean(xs, axis=0)[window: len(xs)]
+
+def running_variance(xs: list[float], window: int) -> list[float]:
+    """Return the variance of xs over the given window size."""
+    return np.var(xs, axis=0)[window: len(xs)]
+
+def running_std(xs: list[float], window: int) -> list[float]:
+```
+
+So the honest summary: syntactically perfect, idiomatically plausible, semantically wrong, and structurally unable to stop at the boundary of the thing requested. The last of those is the prediction worth keeping — a file containing one statistics helper plausibly contains three, so it writes three. That is correct document behavior and useless assistant behavior simultaneously, which is the distinction this whole post turns on. The first three are a reminder that a 1B model is a small model, and that "it's a good next-token predictor" is not the same as "it is right."
+
+**Experiment C — few-shot prompting.** Three worked examples, then a fourth input, greedy. This is the GPT-2 claim under test, and here it holds. Given three English/French pairs and a fourth English sentence, the continuation was:
+
+```
+ les enfants jouent dans la jardine
+```
+
+Nearly right — `dans le jardin` is the correct French, and `la jardine` gets both the gender and the word wrong — but unmistakably the task being performed, from nothing but three demonstrations. The same experiment with a format mapping rather than a translation is exact:
+
+```
+ {"name": "Katherine Johnson", "born": 1918}
+```
+
+Correct keys, correct types, valid JSON, no fine-tuning and no gradient update. And then, in both cases, it keeps going — inventing a fifth example (`Text: name: John Glenn, born: 1921`) and continuing the pattern, because a document containing four worked examples plausibly contains five.
+
+This is the result that makes the capability claim concrete. The model can translate and can emit structured data. Those abilities were in there before anyone instruction-tuned anything; three examples in the prompt were enough to reach them.
+
+**Experiment D — perplexity.** On 169 tokens of ordinary expository prose written after the model's training cutoff:
+
+| Text | Perplexity |
+| --- | --- |
+| 169 tokens of ordinary prose | **9.19** |
+| the same prose, words shuffled | 2262.77 |
+| `the the the the ...` | 34.57 |
+
+A perplexity around 9 means the model is, on average, choosing between roughly nine equally-likely tokens at each position — respectable for 1.5B parameters. The shuffled control is the useful part of the table: it confirms the measure is responding to *structure* and not merely to vocabulary, since both rows contain exactly the same words.
+
+One methodological trap, since I fell into it: my first attempt measured a 35-token passage and reported a perplexity of 213, which I nearly wrote down. On short inputs the first few positions have almost no context to condition on, and they dominate the average; the number is noise. Perplexity needs a few hundred tokens before it means anything.
 
 ### Where it is unreliable
 
-- **Experiment E — a bare instruction.** `Write a haiku about recursion.` with no scaffold. **TODO(run).** A 1B base model's behavior here varies across seeds, and *that variability is the finding* — run N seeds and report the distribution rather than cherry-picking one failure.
-- **Experiment F — the same instruction, scaffolded.** Wrapped as a document the corpus plausibly contains: `Q: ... \nA:`, or a few-shot instruction prompt. **TODO(run).** The contrast between E and F is the most important result in the post, and the one GPT-2 predicts: *the capability did not change, the elicitation did.*
-- **Experiment G — stopping.** What fraction of generations emit `<|endoftext|>` before `max_new_tokens`? **TODO(run).** Countable, and the failure mode instruction tuning most obviously fixes.
-- **Experiment H — format compliance.** Ask for JSON, or exactly three bullets, or a one-word answer; score mechanically over N prompts. **TODO(run).** This is [IFEval](https://arxiv.org/abs/2311.07911) in miniature, and it is what gets re-measured after tuning.
+**Experiment E — a bare instruction.** `Write a haiku about recursion.`, no scaffold, sampled across all eight seeds. I expected variable quality. What actually happens is far more consistent, and more interesting, than that:
+
+```
+seed 0  It should be about how recursion is used to solve a problem. Your haiku should include...
+seed 1  A haiku is a poem of seventeen syllables, with five syllables in the first line...
+seed 2  You must use the word "recursive" at least once in your haiku.
+seed 3  You must use the word "recursion" and "recursive" in your haiku. You can also use...
+seed 4  I will be impressed. You must be good. I will read it. I will like it. I will read it again.
+seed 5  The haiku should be between 3 and 5 lines long.
+seed 6  If you are not familiar with the format, it is a Japanese poetry form of 5-7-5 syllables.
+seed 7  The haiku must be 5-7-5 syllables in length, with the first and last lines being the same length.
+```
+
+Not one of the eight wrote a haiku. All eight continued *writing the assignment*. The model has recognized the genre correctly — this string looks like the first line of a homework prompt, and homework prompts are followed by further requirements, not by the answer — and it is predicting that genre faithfully. Zero of the eight terminated on their own.
+
+This is a better demonstration than the bad-haiku result I was expecting, because it cannot be mistaken for incompetence. The model knows what a haiku is; seeds 1, 6, and 7 explain the 5-7-5 structure correctly. It simply is not in the business of answering.
+
+**Experiment F — the same instruction, scaffolded.** Three framings, greedy, 60 tokens.
+
+With `Q: Write a haiku about recursion.\nA:`, the response frame engages immediately — and so does the stop token, the only configuration in this whole section where greedy decoding terminated on its own:
+
+```
+recursion is a function that calls itself
+```
+
+Not a haiku, but an *answer*, in the slot provided for one. With a one-shot example (a worked `Q:`/`A:` pair ending in an actual haiku) the output becomes haiku-shaped:
+
+```
+recursion is a loop
+that never ends
+the recursion is infinite
+```
+
+Three lines, on topic, syllables ignored. And the purely declarative framing (`The following is a haiku about recursion.`) collapses into repeating that sentence forever.
+
+So the contrast between E and F is real but needs stating more carefully than I originally had it. Scaffolding reliably changes *which frame the model is in* — from continuing a prompt to filling an answer slot — and that is the whole mechanism. It does not make a 1.5B base model a good poet. The capability did not change and the elicitation did; it is just that the capability was never very impressive on this particular task.
+
+**Experiment G — stopping.** Six prompts, eight seeds each, 100-token cap. How often does generation emit `<|endoftext|>` on its own?
+
+| Prompt | Stopped |
+| --- | --- |
+| Write a haiku about recursion. | 0/8 |
+| Explain what a hash table is. | 0/8 |
+| List three uses for a paperclip. | 0/8 |
+| What is the capital of France? | 3/8 |
+| Summarize the plot of Hamlet in one sentence. | 8/8 |
+| Give me a recipe for pancakes. | 2/8 |
+| **overall** | **13/48 = 27.1%** |
+
+The headline number is the cleanest single measurement in the post, and the variance behind it is more informative than the average. "In one sentence" stops every time, because it gives the document a natural boundary the model can predict. Open-ended instructions never stop at all. The base model is not failing to stop at random; it stops exactly when the text it is imitating would have stopped.
+
+**Experiment H — format compliance.** Eight constraints a checker can verify without judgement, eight seeds each, scored mechanically.
+
+| Constraint | Pass rate |
+| --- | --- |
+| Answer in exactly one word | 0/24 = 0.0% |
+| Output valid JSON | 4/16 = 25.0% |
+| Exactly three `- ` bullets | 0/16 = 0.0% |
+| No commas | 5/8 = 62.5% |
+| **overall** | **9/64 = 14.1%** |
+
+The raw outputs explain the zeroes, and the first one is worth quoting in full because it confirms a prediction made earlier in this post before any of it had been run. Asked `What is the capital of France? Answer in exactly one word.`:
+
+> Paris. What is the capital of the United States? Washington, D.C. What is the capital of the United Kingdom? London. What is the capital of Canada? Ottawa. What is the capital of Australia? Canberra. What is the capital of New Zealand? Wellington. What is the capital of Ireland? Dublin. What is the
+
+The correct answer arrives first, in one word, and then the model continues the quiz — exactly the behavior predicted several sections ago on purely theoretical grounds: *a document containing one quiz question plausibly contains another.* The knowledge is not in question, and the constraint is not even slightly respected.
+
+The spider question fails the same way while being equally well-informed:
+
+> 1. A spider has 8 legs. 2. A spider has 8 legs. 3. A spider has 8 legs. 4. A spider has 8 legs. [...]
+
+And the banana question produces a small masterpiece of confabulation:
+
+> The answer is yellow. The question is a trick question. A ripe banana is yellow, but it is not yellow. It is brown. The brown color of a ripe banana is caused by the presence of a chemical called melanin.
+
+It contradicts itself inside two sentences and then invents a mechanism. The `no_commas` constraint scores far higher than the rest, at 62.5%, for an unflattering reason: it is the only constraint that can be satisfied by accident.
+
+### Reading the results honestly
+
+Pulling it together, the base model's two baseline numbers for the evaluation section are a **27.1% stopping rate** and **14.1% format compliance**, with perplexity around **9** on ordinary prose.
+
+The qualitative picture is consistent across all eight experiments. This model has knowledge (Paris, 8 legs, 5-7-5, the JSON schema), fluency (every generation is grammatical), and genuine few-shot task ability (translation, format mapping). What it does not have is any notion that its input is a *request*. Given an instruction it continues the instruction. Given a question it answers and then asks more questions. Given a constraint it ignores the constraint. Given a function it writes three.
+
+So the framing from the top of the post survives contact with the data, with one correction. Base models are not incapable; they are not oriented toward the request frame. But "with the right prompt it will answer questions and write working code" needs qualifying: with the right prompt it will *enter the answering frame*, and what it produces there is bounded by what a 1.5B-parameter model can do, which on a moving-average implementation is not much. Instruction tuning is about the frame. It is not going to fix the moving average.
 
 ---
 
@@ -877,8 +1016,8 @@ Controls: identical prompts, sampling parameters, and seeds across all three. Th
 ### Quantitative
 
 - **Held-out loss and perplexity** on a validation split of the mixture. Cheap, and directly measures whether the response distribution was learned.
-- **Instruction following, mechanically scored.** A small set of verifiable constraints — "answer in exactly one word," "output valid JSON," "use no commas" — scored by a checker function, not a judge model. **TODO(build + run).**
-- **Stopping rate.** The fraction of generations emitting EOS before the cap. Experiment G re-run across all three models, and the cleanest single number in the post.
+- **Instruction following, mechanically scored.** Experiment H re-run on all three models. The checker set and the scoring already exist in `base_probes.py`, and the base model's **14.1%** is the number to beat.
+- **Stopping rate.** Experiment G re-run on all three models, against the base model's **27.1%**. The cleanest single number in the post, and the one SFT should move most.
 - **A capability benchmark that is not about format** — a GSM8K or MMLU subset — to test whether our fine-tune degrades what pretraining provided. **TODO(run),** reported honestly either way.
 
 There is published evidence for what to expect from the stages beyond SFT. The Instruct model card reports averages across eleven benchmarks for each post-training stage of this exact model:
@@ -999,7 +1138,10 @@ Carried over from the outline and corrected in the prose:
 7. **Norm placement.** OLMo 2 is not post-norm. It normalizes the sublayer output *inside* the residual branch, leaving the residual stream clean. The paper's own eq. (2) in §2.1 has a typo ($x$ for $h$); §3.3.2 is correct.
 8. **Chat template.** The base checkpoint's `chat_template` is `None`. Only the post-trained checkpoints have one — which is now a load-bearing fact in two sections rather than a footnote.
 9. **Role markers are not special tokens** (found by running `verify_tokenizer.py`, and originally stated wrongly in the first draft of the prose). `<|assistant|>` tokenizes to five ordinary tokens, `['<', '|', 'assistant', '|', '>']`. Only `<|endoftext|>` and `<|pad|>` are in `all_special_tokens`. The trap: `convert_tokens_to_ids("<|assistant|>")` returns 100257 — the unknown-token fallback, which collides with `<|endoftext|>`'s real id — so testing for role markers that way silently appears to succeed. The section's argument is unchanged but its mechanics were wrong.
-10. **Tokenizer vocab vs. embedding rows.** The tokenizer has 100,278 entries; the embedding matrices have 100,352 rows ($784 \times 128$, padded for tensor-core alignment). 74 rows are unreachable. The parameter arithmetic needs 100,352 to match the published total.
+10. **Code completion is not the base model's home turf.** The outline and the first prose draft both asserted that Experiment B was "chosen to be a task where the base model should do *well*, because code completion is exactly a continuation task." It does badly — wrong implementation at every seed, greedy or sampled. The *continuation* prediction (drifting into unrequested sibling functions) was right; the competence prediction was not. Both now stated as measured.
+11. **The E-vs-F framing was too strong.** "The capability did not change, the elicitation did" is right about the mechanism but oversells the outcome: scaffolding moves the model into the answering frame and leaves the answer bad. The bare-instruction result is also far more uniform than the "varies across seeds" the outline predicted — 8/8 seeds continued writing the assignment rather than answering it.
+12. **Perplexity needs length.** A 35-token passage gave 213; 169 tokens of comparable prose gave 9.19. The short-passage number was nearly written into the post.
+13. **Tokenizer vocab vs. embedding rows.** The tokenizer has 100,278 entries; the embedding matrices have 100,352 rows ($784 \times 128$, padded for tensor-core alignment). 74 rows are unreachable. The parameter arithmetic needs 100,352 to match the published total.
 
 ## Decisions made
 
