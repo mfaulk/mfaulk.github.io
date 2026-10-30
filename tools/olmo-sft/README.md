@@ -80,7 +80,8 @@ Two results worth knowing before rerunning:
   model refuses harmless requests at roughly two of eight seeds. Weighting the
   sample rather than shuffling it is the obvious next experiment.
 
-Caveat on those two captures: their experiment D sections predate a fix. The
+Caveat on `results-base.txt` and `results-sft.txt`: their experiment D sections
+predate a fix. The
 original perplexity samples were ~35 tokens, short enough that the first few
 positions dominate the average and the number is noise (it read 213 where the
 current 169-token passage reads 9.19). `PERPLEXITY_SAMPLES` was replaced and the
@@ -94,6 +95,22 @@ Two measurement caveats worth carrying forward:
   100 tokens, so it is truncated rather than failing to stop.
 - `no_commas` is the only constraint satisfiable by accident, which is why the
   base model scores 62.5% on it and near zero on the rest.
+
+### How small is our training slice?
+
+Three defensible answers, which is why the post states more than one:
+
+| Measure | Ours | Official mixture | Fraction |
+| --- | --- | --- | --- |
+| Examples | 4,000 | 866,138 | 0.46% |
+| Tokens | 1,555,866 | ~699M (estimated) | 0.22% |
+| Trained parameters | 12,058,624 (LoRA) | 1,484,916,736 (full) | 0.81% |
+
+The token estimate comes from tokenizing a random 3,000-example sample through
+the chat template: mean 807.4 tokens per example. Our examples average 389,
+roughly half, because `--max-len 1024` discards the longest candidates. So
+counting examples overstates our data share by about 2x relative to counting
+tokens.
 
 ## Hardware this was developed on
 
@@ -124,19 +141,3 @@ reloaded without a reboot when the card is also driving the display.
 
 Note that `check_env.py` reports VRAM via torch rather than `nvidia-smi`, so it
 keeps working in exactly this situation.
-
-### How small is our training slice?
-
-Three defensible answers, which is why the post states more than one:
-
-| Measure | Ours | Official mixture | Fraction |
-| --- | --- | --- | --- |
-| Examples | 4,000 | 866,138 | 0.46% |
-| Tokens | 1,555,866 | ~699M (estimated) | 0.22% |
-| Trained parameters | 12,058,624 (LoRA) | 1,484,916,736 (full) | 0.81% |
-
-The token estimate comes from tokenizing a random 3,000-example sample through
-the chat template: mean 807.4 tokens per example. Our examples average 389,
-roughly half, because `--max-len 1024` discards the longest candidates. So
-counting examples overstates our data share by about 2x relative to counting
-tokens.
