@@ -6,4 +6,7 @@ Gemfile.lock
 vendor/
 
 # Intellij
-.idea/out/
+.idea/
+
+# Experiment outputs (adapter weights)
+out/
