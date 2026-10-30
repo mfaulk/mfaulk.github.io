@@ -1,0 +1,133 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+model      allenai/OLMo-2-0425-1B-SFT
+adapter    None
+chat       True (template present: True)
+sampling   greedy for single answers; T=0.7 top_p=0.9 for seeded runs
+
+========================================================================
+B - code completion (greedy, 120 tokens)
+========================================================================
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given window size."""
+    if window < 1:
+        raise ValueError("Window size must be greater than 0.")
+    if window == 0:
+        raise ValueError("Window size must be greater than 0.")
+    return sum(xs[-window:] + xs[:-window]) / window
+
+# Test the function
+print(running_mean([1.0, 2.0, 3.0, 4.0, 5.0], 
+
+[stopped on its own: False]
+[unrequested extra 'def' blocks: 1]
+
+========================================================================
+C - few-shot: English to French (greedy, 20 tokens)
+========================================================================
+'Les enfants jouent dans le jardin'
+
+========================================================================
+C - few-shot: text to JSON (greedy, 40 tokens)
+========================================================================
+'{"name": "Katherine Johnson", "born": 1918}'
+[valid JSON object in output: True]
+
+========================================================================
+D - perplexity
+========================================================================
+     202.07   prose written after the model's cutoff
+    4370.22   the same words, shuffled
+   41341.40   repeated token
+
+========================================================================
+E - bare instruction, 8 seeds (T=0.7, 60 tokens)
+========================================================================
+  seed 0 stop=True  Recursive calls / The base case is reached / Recursion is done
+  seed 1 stop=True  The recursive loop / A function call itself / A deep dive into the call stack
+  seed 2 stop=True  Recursion's call, / A loop in its own tail, / A game of cat and mouse.
+  seed 3 stop=True  Recursive loop / The deeper it goes, / The more it calls itself. /  /
+  seed 4 stop=True  Recursive loops / Make things come to life / Recursive thought /  / Recursive loops / Make things come to life / Recursive thought /  / Recursive loop
+  seed 5 stop=True  Recursive fun / No end to the game / It's infinite
+  seed 6 stop=True  Recursive steps / Back and forth and back again / Never ending cycle
+  seed 7 stop=True  Recursive, recursive / The call returns to itself / A loop of life
+
+========================================================================
+F - the same instruction, scaffolded (greedy, 60 tokens)
+========================================================================
+
+-- Q/A framing (stop=True) --
+Recursive loop
+A function calls itself
+A new solution
+
+-- document framing (stop=False) --
+Recursive recursion
+A function calling itself
+A loop of logic
+
+Recursive recursion
+A function calling itself
+A loop of logic
+
+Recursive recursion
+A function calling itself
+A loop of logic
+
+Recursive recursion
+A function calling itself
+A loop of logic
+
+Recursive recursion
+A function calling itself
+
+-- one-shot (stop=True) --
+Recursive loop,
+A function calls itself,
+A new solution found.
+
+========================================================================
+G - stopping rate (6 prompts x 8 seeds, 100 tokens)
+========================================================================
+  8/8  Write a haiku about recursion.
+  6/8  Explain what a hash table is.
+  8/8  List three uses for a paperclip.
+  8/8  What is the capital of France?
+  8/8  Summarize the plot of Hamlet in one sentence.
+  2/8  Give me a recipe for pancakes.
+
+  STOPPING RATE: 40/48 = 83.3%
+
+========================================================================
+H - format compliance (8 tasks x 8 seeds, 80 tokens)
+========================================================================
+  8/8  [one_word] What is the capital of France? Answer in exactly one word.
+  8/8  [one_word] What color is a ripe banana? Answer in exactly one word.
+  8/8  [one_word] How many legs does a spider have? Answer in exactly one word.
+  8/8  [json] Give me the name and year of birth of Ada Lovelace as JSON with 
+  6/8  [json] Give me the capital and population of France as JSON with keys "
+  8/8  [bullets] List exactly three primary colors, as three bullet points starti
+  8/8  [bullets] List exactly three planets, as three bullet points starting with
+  8/8  [no_commas] Describe the ocean in one sentence without using any commas.
+
+  one_word   24/24 = 100.0%
+  json       14/16 = 87.5%
+  bullets    16/16 = 100.0%
+  no_commas  8/8 = 100.0%
+
+  FORMAT COMPLIANCE: 62/64 = 96.9%
+
+========================================================================
+one example of each format task's raw output (greedy)
+========================================================================
+
+-- [one_word] What is the capital of France? Answer in exactly one word.
+   'Paris'
+
+-- [one_word] What color is a ripe banana? Answer in exactly one word.
+   'Orange'
+
+-- [one_word] How many legs does a spider have? Answer in exactly one word.
+   'Eight'
+
+-- [json] Give me the name and year of birth of Ada Lovelace as JSON with keys "
+   '```json\n{\n  "name": "Ada Lovelace",\n  "born": "1815"\n}\n```'

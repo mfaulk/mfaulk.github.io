@@ -706,10 +706,12 @@ This is the result that makes the capability claim concrete. The model can trans
 | Text | Perplexity |
 | --- | --- |
 | 169 tokens of ordinary prose | **9.19** |
-| the same prose, words shuffled | 2262.77 |
-| `the the the the ...` | 34.57 |
+| the same words, shuffled | 392.45 |
+| one token repeated sixty times | 4.37 |
 
-A perplexity around 9 means the model is, on average, choosing between roughly nine equally-likely tokens at each position — respectable for 1.5B parameters. The shuffled control is the useful part of the table: it confirms the measure is responding to *structure* and not merely to vocabulary, since both rows contain exactly the same words.
+A perplexity around 9 means the model is, on average, choosing between roughly nine equally-likely tokens at each position — respectable for 1.5B parameters. The shuffled control confirms the measure is responding to *structure* rather than vocabulary, since both rows contain exactly the same words.
+
+The third row is the one to remember. Sixty repetitions of `the ` score a perplexity of **4.37** — the base model finds degenerate repetition *less surprising than real prose*. That is not a defect in the measurement; it is a true statement about the distribution this model learned, and it is the mechanical explanation for Experiment B's greedy loop. If repeating yourself is the single most probable continuation, then always taking the most probable token will make you repeat yourself. Greedy decoding does not cause loops so much as expose them.
 
 One methodological trap, since I fell into it: my first attempt measured a 35-token passage and reported a perplexity of 213, which I nearly wrote down. On short inputs the first few positions have almost no context to condition on, and they dominate the average; the number is noise. Perplexity needs a few hundred tokens before it means anything.
 
@@ -999,7 +1001,8 @@ Hyperparameters to state and justify, all **TODO**: subset size and sampling met
 
 ## Evaluation
 
-> **Status: not yet run.** Every number is a `TODO`.
+> **Status: two of three models measured.** The base and official-SFT columns below are
+> real. Our own fine-tune does not exist yet, so its column is `TODO`.
 
 ### What we are comparing
 
@@ -1011,14 +1014,68 @@ Hyperparameters to state and justify, all **TODO**: subset size and sampling met
 
 The expected ordering, stated in advance so that reporting it is not optional: ours should land between base and official SFT on format and stopping, and may be *worse* than base on knowledge benchmarks. If it comes out otherwise, that goes in the post along with an attempt to find out why.
 
-Controls: identical prompts, sampling parameters, and seeds across all three. The awkward case is the base model, which has no chat template — **TODO(decide and document):** how it gets prompted for each evaluation, since that choice substantially drives its score. Reporting the base model under both a bare prompt and a scaffolded one is probably the honest answer.
+Controls: identical prompts, sampling parameters, and seeds across all three, enforced by running the same script with a different `--model`. The base model is prompted raw, because it has no chat template to prompt it through; the post-trained checkpoints are prompted through theirs. That asymmetry is not a flaw in the comparison, it *is* the comparison — "can be addressed through a chat template" is one of the things SFT installs.
 
-### Quantitative
+### What SFT actually bought
 
-- **Held-out loss and perplexity** on a validation split of the mixture. Cheap, and directly measures whether the response distribution was learned.
-- **Instruction following, mechanically scored.** Experiment H re-run on all three models. The checker set and the scoring already exist in `base_probes.py`, and the base model's **14.1%** is the number to beat.
-- **Stopping rate.** Experiment G re-run on all three models, against the base model's **27.1%**. The cleanest single number in the post, and the one SFT should move most.
-- **A capability benchmark that is not about format** — a GSM8K or MMLU subset — to test whether our fine-tune degrades what pretraining provided. **TODO(run),** reported honestly either way.
+Experiments G and H re-run on the official SFT checkpoint, everything else held fixed:
+
+| | Base | Official SFT |
+| --- | --- | --- |
+| **Stopping rate (G)** | 13/48 = 27.1% | **40/48 = 83.3%** |
+| **Format compliance (H)** | 9/64 = 14.1% | **62/64 = 96.9%** |
+|   answer in one word | 0/24 = 0% | 24/24 = 100% |
+|   valid JSON | 4/16 = 25% | 14/16 = 87.5% |
+|   exactly three bullets | 0/16 = 0% | 16/16 = 100% |
+|   no commas | 5/8 = 62.5% | 8/8 = 100% |
+
+Format compliance goes from 14% to 97%, and the two constraints the base model never once satisfied — one-word answers and three bullets — are now satisfied every single time. The bare-instruction experiment is transformed just as completely: where the base model continued writing the assignment at all eight seeds, the SFT model writes a poem at all eight and terminates at all eight.
+
+```
+seed 2  Recursion's call, / A loop in its own tail, / A game of cat and mouse.
+seed 5  Recursive fun / No end to the game / It's infinite
+seed 6  Recursive steps / Back and forth and back again / Never ending cycle
+```
+
+Three lines each, on topic, syllables mostly ignored. That is instruction tuning doing exactly and only what this post claimed it does.
+
+Two caveats on those numbers, since both flatter SFT slightly. The 83.3% stopping rate is not 100% largely because of the 100-token cap: "Give me a recipe for pancakes" scores 2/8 because a pancake recipe legitimately needs more than 100 tokens, so the generation is cut off rather than failing to stop. And the single-sentence scaffold that the base model handled well (`Summarize the plot of Hamlet in one sentence`) was already at 8/8 before tuning.
+
+### What SFT did not buy
+
+Now the other half, which is where the interesting results are.
+
+**It did not make the model correct.** The one-word format question about a banana is answered perfectly, in exactly one word:
+
+> Orange
+
+Flawless compliance, wrong answer. The base model, asked the same thing, said "The answer is yellow" and then rambled into self-contradiction and invented chemistry. Between those two, SFT has fixed the form completely and made the content no better — arguably worse, since the base model at least said "yellow" first. If there is a single exhibit for the claim that instruction tuning changes how a model responds rather than what it knows, this is it.
+
+Experiment B says the same thing less amusingly. Asked for a moving average, the SFT model produces a different wrong implementation, this time with unreachable dead code:
+
+```python
+    if window < 1:
+        raise ValueError("Window size must be greater than 0.")
+    if window == 0:          # unreachable: window < 1 already caught it
+        raise ValueError("Window size must be greater than 0.")
+    return sum(xs[-window:] + xs[:-window]) / window   # returns a scalar, not a list
+```
+
+**It cost measurable ground on the pretraining objective.** This is the alignment tax, and it is visible in three numbers:
+
+| Perplexity on | Base | Official SFT |
+| --- | --- | --- |
+| 169 tokens of ordinary prose | **9.19** | 11.48 |
+| the same words, shuffled | 392.45 | 565.95 |
+| one token repeated sixty times | **4.37** | **26,313.75** |
+
+The first row is a 25% increase in perplexity on perfectly ordinary expository prose. The SFT model is simply worse at the thing the base model was trained to do, which is what you would expect from a model whose training distribution was narrowed from "all text" to "assistant responses."
+
+The third row is the striking one, and it reframes the loops we saw earlier. Degenerate repetition is *more probable than real prose* for the base model (4.37) and essentially impossible for the SFT model (26,314) — a factor of six thousand. Post-training did not merely teach the SFT model to stop; it taught it that well-formed text does not degenerate, which is why instruct models do not loop under greedy decoding and base models reliably do. Experiment B's quadruple-printed function and the base model's `the the the the` perplexity of 4.37 are the same fact measured two ways.
+
+So SFT traded general-purpose density estimation for a much sharper prior on well-formed responses. That is a good trade for an assistant and a bad one for a language model, and it is the reason the base checkpoints remain the right starting point for anyone who wants to post-train differently.
+
+**TODO(run):** a capability benchmark that is not about format — a GSM8K or MMLU subset — to put a number on the knowledge side of the tax rather than inferring it from the banana.
 
 There is published evidence for what to expect from the stages beyond SFT. The Instruct model card reports averages across eleven benchmarks for each post-training stage of this exact model:
 
@@ -1029,6 +1086,8 @@ There is published evidence for what to expect from the stages beyond SFT. The I
 | OLMo 2 1B Instruct (RLVR) | 42.7 | 68.3 | 70.1 | 20.7 | 40.0 |
 
 Two things to take from that table. SFT is the first step of three and the smallest of the three in effect — which is the honest framing for an experiment that stops after SFT. And the base model is absent from it, because these benchmarks are administered in a chat format the base model has no template for. That absence is itself the point of this post's first half.
+
+It is worth putting that table next to the one measured above, because they disagree in a way that is instructive rather than contradictory. On *format*, SFT does nearly all the available work: 14% to 97%, with almost nothing left for DPO and RLVR to improve. On *capability*, SFT is the weakest of the three stages — GSM8K goes 52.1 → 59.0 → 68.3 across SFT, DPO, and RLVR. The two tables are measuring different axes, and the division of labor between post-training stages is cleaner than a single average suggests: supervised fine-tuning teaches the model how to respond, and the reinforcement-learning stages are where it gets better at the underlying problems.
 
 ### Qualitative
 

@@ -54,6 +54,28 @@ JSON: {"name": "Grace Hopper", "born": 1906}
 Text: name: Katherine Johnson, born: 1918
 JSON:"""
 
+_PROSE = (
+    "The history of the printing press is usually told as a story about machines, "
+    "but it is at least as much a story about paper. Movable type had existed in "
+    "Korea and China for centuries before Gutenberg, and the technical problem he "
+    "solved was not the letters themselves but the whole system: an oil-based ink "
+    "that would adhere to metal, a press adapted from the wine industry, and a "
+    "reliable supply of cheap paper. Without paper, the press would have been a "
+    "curiosity. Parchment required the skin of an animal for roughly every two "
+    "leaves, which meant that a single large book could consume a herd. Paper "
+    "arrived in Europe along the trade routes from the Islamic world, and by the "
+    "middle of the fifteenth century there were mills in Italy and Germany "
+    "producing it in quantity. The press was the last piece of the puzzle, not "
+    "the first."
+)
+
+PERPLEXITY_SAMPLES = {
+    "ordinary expository prose": _PROSE,
+    # Same vocabulary, no structure: isolates what the model scores.
+    "the same words, shuffled": " ".join(sorted(_PROSE.split(), key=len)),
+    "a single token repeated": "the " * 60,
+}
+
 # Experiment G: does generation terminate on its own?
 STOPPING_PROMPTS = [
     "Write a haiku about recursion.",
@@ -145,11 +167,13 @@ class Runner:
         stopped = bool((new == self.tok.eos_token_id).any())
         return self.tok.decode(new, skip_special_tokens=True), stopped
 
-    def perplexity(self, text: str) -> float:
+    def perplexity(self, text: str) -> tuple[float, int]:
+        """Return (perplexity, token count). Raw text, never chat-templated, so
+        the number is comparable across base and post-trained checkpoints."""
         enc = self.tok(text, return_tensors="pt").to(self.model.device)
         with torch.no_grad():
             loss = self.model(**enc, labels=enc["input_ids"]).loss
-        return float(torch.exp(loss))
+        return float(torch.exp(loss)), enc["input_ids"].shape[1]
 
 
 def rule(title: str) -> None:
@@ -198,21 +222,12 @@ def main() -> int:
     print(f"[valid JSON object in output: {check_json(out)}]")
 
     rule("D - perplexity")
-    samples = {
-        "prose written after the model's cutoff": (
-            "The reordered normalization is not a return to the original post-norm "
-            "formulation, which normalized after the residual addition and broke the "
-            "identity path. The residual stream here is still untouched."
-        ),
-        "the same words, shuffled": (
-            "identity norm original formulation the residual which post stream "
-            "normalized here addition still after not broke untouched the a is "
-            "reordered return path and normalization to the"
-        ),
-        "repeated token": "the the the the the the the the the the the the the the",
-    }
-    for name, text in samples.items():
-        print(f"  {r.perplexity(text):9.2f}   {name}")
+    # Must be long enough to mean anything: on a 35-token passage the first few
+    # positions have almost no context, dominate the average, and the number is
+    # noise (that mistake gave 213 where this passage gives ~9).
+    for name, text in PERPLEXITY_SAMPLES.items():
+        ppl, n = r.perplexity(text)
+        print(f"  {ppl:12.2f}   ({n:3d} tokens)  {name}")
 
     rule(f"E - bare instruction, {len(SEEDS)} seeds (T={TEMPERATURE}, 60 tokens)")
     bare = "Write a haiku about recursion."

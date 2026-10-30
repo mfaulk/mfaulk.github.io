@@ -47,15 +47,34 @@ Sampling is fixed in the script (greedy for single answers; `T=0.7`,
 `top_p=0.9`, seeds 0–7 for distributions) rather than passed in, so the three
 runs cannot accidentally differ in how they sample.
 
-### Base checkpoint results
+### Results so far
 
 Recorded here so a rerun can be checked against them:
 
-| Measure | `OLMo-2-0425-1B` |
-| --- | --- |
-| Stopping rate (G) | 13/48 = 27.1% |
-| Format compliance (H) | 9/64 = 14.1% |
-| Perplexity, 169 tokens of ordinary prose | 9.19 |
+| Measure | Base | Official SFT |
+| --- | --- | --- |
+| Stopping rate (G) | 13/48 = 27.1% | 40/48 = 83.3% |
+| Format compliance (H) | 9/64 = 14.1% | 62/64 = 96.9% |
+| Perplexity, 169 tokens of ordinary prose | 9.19 | 11.48 |
+| Perplexity, same words shuffled | 392.45 | 565.95 |
+| Perplexity, one token repeated 60x | 4.37 | 26313.75 |
+
+Raw captures are in `results-base.txt` and `results-sft.txt`.
+
+Caveat on those two captures: their experiment D sections predate a fix. The
+original perplexity samples were ~35 tokens, short enough that the first few
+positions dominate the average and the number is noise (it read 213 where the
+current 169-token passage reads 9.19). `PERPLEXITY_SAMPLES` was replaced and the
+table above holds the corrected figures; the D section inside the saved captures
+does not.
+
+Two measurement caveats worth carrying forward:
+
+- The stopping rate is bounded by `max_new_tokens=100`. "Give me a recipe for
+  pancakes" scores 2/8 even post-SFT because a recipe genuinely needs more than
+  100 tokens, so it is truncated rather than failing to stop.
+- `no_commas` is the only constraint satisfiable by accident, which is why the
+  base model scores 62.5% on it and near zero on the rest.
 
 ## Hardware this was developed on
 
