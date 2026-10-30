@@ -124,3 +124,19 @@ reloaded without a reboot when the card is also driving the display.
 
 Note that `check_env.py` reports VRAM via torch rather than `nvidia-smi`, so it
 keeps working in exactly this situation.
+
+### How small is our training slice?
+
+Three defensible answers, which is why the post states more than one:
+
+| Measure | Ours | Official mixture | Fraction |
+| --- | --- | --- | --- |
+| Examples | 4,000 | 866,138 | 0.46% |
+| Tokens | 1,555,866 | ~699M (estimated) | 0.22% |
+| Trained parameters | 12,058,624 (LoRA) | 1,484,916,736 (full) | 0.81% |
+
+The token estimate comes from tokenizing a random 3,000-example sample through
+the chat template: mean 807.4 tokens per example. Our examples average 389,
+roughly half, because `--max-len 1024` discards the longest candidates. So
+counting examples overstates our data share by about 2x relative to counting
+tokens.

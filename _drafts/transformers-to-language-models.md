@@ -1099,7 +1099,7 @@ The settings, with reasons:
 
 | | | Why |
 | --- | --- | --- |
-| Examples | 4,000 train, 200 validation | What fits in a coffee break. 0.5% of the official mixture |
+| Examples | 4,000 train, 200 validation | What fits in a coffee break. 0.46% of the mixture's examples, 0.22% of its tokens |
 | `max_len` | 1024 tokens | Longer examples dropped rather than truncated, so no response is cut mid-sentence |
 | $r$, $\alpha$ | 16, 32 | $\alpha = 2r$ is the common default; nothing here was tuned |
 | Learning rate | 1e-4, cosine, 3% warmup | Two orders of magnitude above a full fine-tuning rate, because $B$ starts at zero and the adapter has to travel from nothing to useful in 250 steps |
@@ -1160,7 +1160,9 @@ Experiments G and H re-run on all three models, everything else held fixed:
 |   exactly three bullets | 0/16 = 0% | **0/16 = 0%** | 16/16 = 100% |
 |   no commas | 5/8 = 62.5% | 6/8 = 75.0% | 8/8 = 100% |
 
-Our 4,000-example adapter captures most of the stopping improvement — 75% against the official 83% — and about half the format improvement. For 22 minutes of compute and 0.5% of the data, landing between the two endpoints is the result the post predicted.
+Our 4,000-example adapter captures most of the stopping improvement — 75% against the official 83% — and about half the format improvement. Landing between the two endpoints is the result the post predicted.
+
+It is worth being careful about how small "small" is here, because there are three different answers and they differ by orders of magnitude. By examples, 4,000 against 866,138 is 0.46%. By *tokens* it is 0.22%: our examples average 389 tokens against roughly 807 for the mixture as a whole, because the 1024-token cap discarded the longest candidates. And by compute it is far smaller again — the official checkpoint is a full fine-tune of all 1.48B parameters, while we updated 12M LoRA parameters for a single epoch in 22 minutes. Whenever anyone reports a fraction of a training set, it is worth asking which of those three they mean.
 
 Two cells deserve attention. On JSON our fine-tune **matches the official checkpoint exactly**, 14/16 both. And on three-bullet lists it scores **0/16, identical to the untouched base model**, against the official checkpoint's perfect 16/16. That is not a small shortfall, it is a total failure to acquire one specific capability, and it is the clearest thing in the whole experiment.
 
