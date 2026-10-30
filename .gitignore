@@ -6,4 +6,4 @@ Gemfile.lock
 vendor/
 
 # Intellij
-.idea/
+.idea/out/

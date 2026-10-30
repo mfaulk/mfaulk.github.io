@@ -874,7 +874,40 @@ OLMo 2 1B's SFT stage uses [`allenai/tulu-3-sft-olmo-2-mixture-0225`](https://hu
 
 **We will use a few thousand.** Stating that early sets expectations correctly: the goal is to demonstrate the *direction* of the change on a hobbyist budget, not to reproduce the checkpoint. That a few thousand examples is informative at all is itself a finding from the literature — [LIMA](https://arxiv.org/abs/2305.11206) (Zhou et al., 2023) got competitive instruction-following from 1,000 carefully-curated examples, on the argument that SFT is teaching a format the model already has the capability to fill.
 
-**TODO(run):** show two or three real examples from the mixture, as raw `messages` lists, with their `source` field.
+Three real examples, abridged only by my choosing short ones. Each carries a `source` field naming the subset it came from, which is how the mixture stays auditable:
+
+```json
+// source: ai2-adapt-dev/no_robots_converted
+[{"role": "user",      "content": "Write a poem about coffee."},
+ {"role": "assistant", "content": "Fuel for the body\nFuel for the soul\nCoffee beans are the best\n..."}]
+
+// source: ai2-adapt-dev/tulu_v3.9_open_math_2_gsm8k_50k
+[{"role": "user",      "content": "Bruno wants to buy two and one-half dozens of pens. How many pens will he have?"},
+ {"role": "assistant", "content": "One dozen is 12 pens.\nSo two dozen pens are 2 * 12 = 24 pens.\n...
+                                   Thus, Bruno will have \\boxed{30} pens."}]
+
+// source: ai2-adapt-dev/flan_v2_converted
+[{"role": "user",      "content": "Write a sentence not in English."},
+ {"role": "assistant", "content": "Byla dobrá kamarádka a velmi krásná."}]
+```
+
+Those three are a fair sample of the mixture's range, and of its construction. The first is human-written. The second is synthetic, and shows its working step by step — note that the demonstrated *style* of a worked solution is itself part of what SFT teaches, which is why this subset exists. The third is an existing NLP dataset rewritten into instruction form, templated prompt and all.
+
+The mixture draws on 19 such sources. The largest few:
+
+| Examples | Source |
+| --- | --- |
+| 107,273 | `evol_codealpaca_heval_decontaminated` |
+| 99,989 | `tulu_v3.9_aya_100k` |
+| 99,348 | `tulu_v3.9_wildchat_100k` |
+| 89,982 | `flan_v2_converted` |
+| 64,312 | `numinamath_tir_math_decontaminated` |
+| 50,000 | `tulu_v3.9_open_math_2_gsm8k_50k` |
+| 50,000 | `tulu_v3.9_synthetic_finalresp_wildguardmixtrain_decontaminated_50k` |
+
+Code, multilingual, real user conversations, templated NLP tasks, two kinds of mathematics, and safety — in deliberate proportions. The `decontaminated` suffixes are worth noticing: those subsets have had evaluation-set overlap removed, which is the sort of thing that only shows up in a mixture whose composition is published.
+
+Of the 866,138 examples, 823,278 are single turn. Our experiment uses single-turn examples only, which is a scope limit rather than a shortcut: masking a multi-turn conversation requires per-turn span arithmetic, and everything measured in this post is single-turn anyway.
 
 ### Chat templates
 
@@ -946,22 +979,41 @@ The loss is the cross-entropy we started with. What changes is the label tensor.
 
 If the loss includes prompt tokens, the model spends capacity learning to *generate user messages* — a distribution we have no use for and, when the prompts are templated or synthetic, one that is badly unrepresentative of real user input. What we want is $p_\theta(\text{response} \mid \text{prompt})$, so we score only the response tokens. Mechanically: set `labels` to $-100$ on the prompt and role tokens, and rely on `F.cross_entropy`'s default `ignore_index=-100` to drop them from the average. It is the same mechanism as the previous post's `ignore_index=PAD`, with a different motivation — there we were ignoring padding because it was meaningless, here we are ignoring real tokens because they are not ours to model.
 
+Here is the whole of it. The response span is located by rendering the prompt and the full conversation through the *same* template and taking the difference — never by searching the text for `<|assistant|>`, which as we established is five ordinary tokens rather than a marker you can reliably find:
+
 ```python
 def build_example(tok, messages, max_len):
-    """Render one conversation and mask all non-response tokens out of the loss."""
-    input_ids, labels = [], []
+    """Render one single-turn conversation; mask everything but the response."""
+    prompt_text = tok.apply_chat_template(
+        messages[:1], tokenize=False, add_generation_prompt=True
+    )
+    full_text = tok.apply_chat_template(messages, tokenize=False)
 
-    for i, msg in enumerate(messages):
-        # Render the prefix through the prompt side of this turn, then the full turn,
-        # so the response span is exactly the difference between the two.
-        prefix = tok.apply_chat_template(messages[:i] + [msg], tokenize=True,
-                                         add_generation_prompt=(msg["role"] != "assistant"))
-        ...  # TODO(code): finish, then assert the spans line up
+    prompt_ids = tok(prompt_text, add_special_tokens=False)["input_ids"]
+    full_ids = tok(full_text, add_special_tokens=False)["input_ids"]
 
-    return {"input_ids": input_ids, "labels": labels}
+    # The generation prompt must be a token-level prefix of the full rendering.
+    # BPE does not guarantee this in general, so check rather than assume.
+    if full_ids[: len(prompt_ids)] != prompt_ids:
+        return None
+    if len(full_ids) > max_len or len(full_ids) <= len(prompt_ids):
+        return None
+
+    labels = [-100] * len(prompt_ids) + full_ids[len(prompt_ids):]
+    assert len(labels) == len(full_ids)
+    return {"input_ids": full_ids, "labels": labels}
 ```
 
-**TODO(code):** finish the collator, and include in the post the two checks that catch the off-by-one errors this code is prone to — assert that the count of unmasked labels equals the count of response tokens, and print one example decoded with masked positions replaced by `·` so the mask is visible rather than asserted.
+That prefix check is the one piece of defensive code in this post that clearly earns its place. Byte-pair encoding does not promise that tokenizing a prefix of a string yields a prefix of the whole string's tokens — a merge can straddle the boundary — and here the boundary falls immediately after a newline that is itself part of a merged `>\n` token. If a merge ever straddles it, every label shifts by one position, the model trains to predict the token before the one it should, and nothing anywhere reports an error. One list comparison per example buys immunity from a silent failure.
+
+The complementary check is to *look* at the mask rather than assert things about it. Printing a training example with masked positions replaced by `·`:
+
+```
+··············································································To solve this
+problem, let's use Python and SymPy to evaluate the given expressions for \( x \) and \( y \).
+```
+
+Prompt masked, response scored, boundary where it belongs. Across the 4,000 examples we train on, 59.5% of all tokens are scored; the other 40.5% are prompt text the model is deliberately not being taught to write.
 
 Two smaller decisions, each worth a sentence in the final post:
 
@@ -1009,7 +1061,15 @@ Only $A$ and $B$ receive gradients, so the optimizer state shrinks in proportion
 | Attention only (`q,k,v,o_proj`) | 4,194,304 | 0.28% |
 | Attention + MLP (`gate,up,down_proj`) | 12,058,624 | 0.81% |
 
-The attention-only figure is $r(d_{\text{out}} + d_{\text{in}}) = 16(2048 + 2048) = 65{,}536$ per projection, four projections per block, sixteen blocks. The MLP adds three matrices of shape $2048 \times 8192$ or its transpose, each costing $16(2048 + 8192) = 163{,}840$. **TODO(decide):** attention-only is the classic recipe; including the MLP is now common practice and is the stronger default for format learning. Pick one, state why, and confirm the number against `model.print_trainable_parameters()`.
+The attention-only figure is $r(d_{\text{out}} + d_{\text{in}}) = 16(2048 + 2048) = 65{,}536$ per projection, four projections per block, sixteen blocks. The MLP adds three matrices of shape $2048 \times 8192$ or its transpose, each costing $16(2048 + 8192) = 163{,}840$.
+
+We will target all seven. Attention-only is the classic recipe from the paper, but the feed-forward networks hold three quarters of each block's parameters, and there is no reason to believe a change of response format lives entirely in attention. The library agrees with the arithmetic:
+
+```
+trainable params: 12,058,624 || all params: 1,496,975,360 || trainable%: 0.8055
+```
+
+Note that `all params` is larger than the 1,484,916,736 we counted earlier, by exactly the 12,058,624 of adapter weights — the adapters are additional parameters sitting beside the frozen ones, not a reparameterization of them.
 
 At inference $BA$ can be folded into $W_0$, so a merged adapter adds no latency. That, more than the memory saving, is why LoRA won.
 
@@ -1018,7 +1078,7 @@ At inference $BA$ can be folded into $W_0$, so a merged adapter adds no latency.
 > **Status: not yet run.** The hardware for this section is not yet set up, so every
 > hyperparameter below is a decision to be made and every result is a `TODO`.
 
-**TODO(decide):** hand-rolled PyTorch loop, or `trl`'s `SFTTrainer`? The loop is more in keeping with this series — it makes the masking visible, and it is the same loop as the previous post's with a different data source. `SFTTrainer` is what a reader would actually reach for. The plan is the loop first, with `SFTTrainer` shown afterward as the production equivalent.
+The training loop is hand-rolled rather than `trl`'s `SFTTrainer`, for one reason: the only genuinely interesting thing in this section is the label masking, and a `Trainer` hides it behind a data collator you did not write. The loop is otherwise the previous post's loop with a different data source — AdamW, a cosine schedule with warmup, gradient clipping, gradient accumulation to reach an effective batch size the card cannot hold directly.
 
 ```python
 # Sketch only — see the companion directory for the version that runs.
