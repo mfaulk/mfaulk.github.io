@@ -51,15 +51,34 @@ runs cannot accidentally differ in how they sample.
 
 Recorded here so a rerun can be checked against them:
 
-| Measure | Base | Official SFT |
-| --- | --- | --- |
-| Stopping rate (G) | 13/48 = 27.1% | 40/48 = 83.3% |
-| Format compliance (H) | 9/64 = 14.1% | 62/64 = 96.9% |
-| Perplexity, 169 tokens of ordinary prose | 9.19 | 11.48 |
-| Perplexity, same words shuffled | 392.45 | 565.95 |
-| Perplexity, one token repeated 60x | 4.37 | 26313.75 |
+| Measure | Base | Ours (4k LoRA) | Official SFT (866k) |
+| --- | --- | --- | --- |
+| Stopping rate (G) | 13/48 = 27.1% | 36/48 = 75.0% | 40/48 = 83.3% |
+| Format compliance (H) | 9/64 = 14.1% | 36/64 = 56.2% | 62/64 = 96.9% |
+| — one word | 0/24 | 16/24 | 24/24 |
+| — valid JSON | 4/16 | 14/16 | 14/16 |
+| — three bullets | 0/16 | 0/16 | 16/16 |
+| — no commas | 5/8 | 6/8 | 8/8 |
+| Perplexity, 169 tokens of ordinary prose | 9.19 | 9.28 | 11.48 |
+| Perplexity, same words shuffled | 392.45 | 393.19 | 565.95 |
+| Perplexity, one token repeated 60x | 4.37 | 3.46 | 26313.75 |
 
-Raw captures are in `results-base.txt` and `results-sft.txt`.
+Raw captures are in `results-base.txt`, `results-sft.txt`, and `results-ours.txt`.
+
+Our run: `sft_lora.py --examples 4000`, rank 16, all seven projections, lr 1e-4,
+effective batch 16, 1 epoch, 250 optimizer steps. Held-out loss 1.4419 to
+1.2452. 21.9 min and 11.83 GiB peak on an RTX A4000.
+
+Two results worth knowing before rerunning:
+
+- Our adapter scores 0/16 on three-bullet lists, the same as the untouched base
+  model, against the official checkpoint's 16/16. A uniform random 4,000-example
+  sample drew only 158 examples from the precise-instruction-following subset
+  (`personahub_ifdata_manual_seed_v3_29980`), which has 29,980 in the full mixture.
+- The same uniform sample drew 598 examples (15%) from the three refusal-shaped
+  subsets (`wildguardmixtrain`, `wildjailbreak`, `coconot`), and the resulting
+  model refuses harmless requests at roughly two of eight seeds. Weighting the
+  sample rather than shuffling it is the obvious next experiment.
 
 Caveat on those two captures: their experiment D sections predate a fix. The
 original perplexity samples were ~35 tokens, short enough that the first few

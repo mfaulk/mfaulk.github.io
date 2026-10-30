@@ -1,8 +1,9 @@
 # Deep Learning: From Transformers to Language Models
 
-> **Status: draft.** The conceptual half of this post is written. The experimental half is
-> structured but unrun — every result is marked `TODO`, and nothing is invented. See the
-> working notes at the end. Delete this block and that one before publishing.
+> **Status: draft, substantially complete.** Every result in this post has been run and
+> every number comes from a real artifact; nothing is estimated. What remains is marked
+> `TODO` inline: the KV cache implementation, a capability benchmark, and four figures.
+> See the working notes at the end. Delete this block and that one before publishing.
 
 The [previous post](https://mfaulk.github.io/2026/01/13/transformers.html) built an encoder-decoder transformer from scratch and trained it to reverse sequences of symbols. That model works, and it is recognizably the architecture from *Attention Is All You Need* — but it is not a thing you can ask a question. This post is about the distance between those two objects:
 
@@ -1013,7 +1014,7 @@ The complementary check is to *look* at the mask rather than assert things about
 problem, let's use Python and SymPy to evaluate the given expressions for \( x \) and \( y \).
 ```
 
-Prompt masked, response scored, boundary where it belongs. Across the 4,000 examples we train on, 59.5% of all tokens are scored; the other 40.5% are prompt text the model is deliberately not being taught to write.
+Prompt masked, response scored, boundary where it belongs. Across the 4,000 examples we train on, 1,028,048 of 1,555,866 tokens are scored — 66.1%. The other third is prompt text the model is deliberately not being taught to write.
 
 Two smaller decisions, each worth a sentence in the final post:
 
@@ -1075,62 +1076,122 @@ At inference $BA$ can be folded into $W_0$, so a merged adapter adds no latency.
 
 ### The training run
 
-> **Status: not yet run.** The hardware for this section is not yet set up, so every
-> hyperparameter below is a decision to be made and every result is a `TODO`.
-
 The training loop is hand-rolled rather than `trl`'s `SFTTrainer`, for one reason: the only genuinely interesting thing in this section is the label masking, and a `Trainer` hides it behind a data collator you did not write. The loop is otherwise the previous post's loop with a different data source — AdamW, a cosine schedule with warmup, gradient clipping, gradient accumulation to reach an effective batch size the card cannot hold directly.
 
 ```python
-# Sketch only — see the companion directory for the version that runs.
 base = AutoModelForCausalLM.from_pretrained("allenai/OLMo-2-0425-1B",
-                                            torch_dtype=torch.bfloat16)
+                                            dtype=torch.bfloat16).to("cuda")
 tok  = AutoTokenizer.from_pretrained("allenai/OLMo-2-0425-1B-SFT")  # the one with the template
 
 model = get_peft_model(base, LoraConfig(
     r=16, lora_alpha=32, lora_dropout=0.05,
-    target_modules=[...],          # TODO: decide
-    task_type="CAUSAL_LM",
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                    "gate_proj", "up_proj", "down_proj"],
+    bias="none", task_type="CAUSAL_LM",
 ))
-model.print_trainable_parameters()  # TODO: paste real output
+model.print_trainable_parameters()
+# trainable params: 12,058,624 || all params: 1,496,975,360 || trainable%: 0.8055
 ```
 
-Note the detail in the second line: the chat template lives on the *SFT* tokenizer, because the base checkpoint has none. Training a base model to follow a template means importing the template from somewhere, and that somewhere needs to be the same place the evaluation imports it from.
+Note the detail in the second line: the chat template lives on the *SFT* tokenizer, because the base checkpoint has none. Training a base model to follow a template means importing the template from somewhere, and that somewhere must be the same place the evaluation imports it from. This is the single easiest way to get a silently broken result, and the defense is simply never to have two sources.
 
-Hyperparameters to state and justify, all **TODO**: subset size and sampling method, `max_seq_length`, $r$ and $\alpha$, learning rate (1e-4 to 2e-4 is the usual LoRA range, well above a full fine-tuning rate — explain why), batch size and gradient accumulation, epochs, warmup. **TODO(report):** wall-clock, peak VRAM, hardware, final train loss, held-out loss, and the loss curves.
+The settings, with reasons:
 
-**Failure modes to document as they happen** rather than cleaning up afterward, since this is the part of a tutorial that is actually scarce: OOM and what was reduced to fix it; loss not moving (usually the learning rate, or adapters not actually attached — `print_trainable_parameters()` is the check); garbage at inference from a template mismatch; forgetting `add_generation_prompt=True`.
+| | | Why |
+| --- | --- | --- |
+| Examples | 4,000 train, 200 validation | What fits in a coffee break. 0.5% of the official mixture |
+| `max_len` | 1024 tokens | Longer examples dropped rather than truncated, so no response is cut mid-sentence |
+| $r$, $\alpha$ | 16, 32 | $\alpha = 2r$ is the common default; nothing here was tuned |
+| Learning rate | 1e-4, cosine, 3% warmup | Two orders of magnitude above a full fine-tuning rate, because $B$ starts at zero and the adapter has to travel from nothing to useful in 250 steps |
+| Batch | 2 × 8 accumulation = 16 | 2 is what 1024-token sequences fit in 16 GiB; accumulation buys the effective batch back |
+| Epochs | 1 | 4,000 examples is too few to risk a second pass |
+
+And the result:
+
+```
+single-turn examples available: 823,278
+train 4,000  val 200  skipped 676 (too long or span mismatch)
+tokens: 1,555,866 total, 1,028,048 scored (66.1% of the loss)
+
+held-out loss before training: 1.4419
+step    1/250  loss 1.0379  lr 1.43e-05  peak 10.96 GiB    4s
+step   50/250  loss 1.0941  lr 9.25e-05  peak 11.72 GiB  204s
+step  100/250  loss 2.0671  lr 6.80e-05  peak 11.81 GiB  456s
+step  150/250  loss 1.1064  lr 3.63e-05  peak 11.81 GiB  717s
+step  200/250  loss 0.8148  lr 1.01e-05  peak 11.83 GiB  997s
+step  250/250  loss 0.5179  lr 0.00e+00  peak 11.83 GiB 1286s
+
+held-out loss after training:  1.2452
+wall clock: 21.9 min   peak VRAM: 11.83 GiB
+```
+
+Twenty-two minutes and 11.8 GiB, on one RTX A4000. Held-out loss falls from 1.4419 to 1.2452, a 14% reduction.
+
+Two honest notes about that log. The per-step training losses swing from 0.52 to 2.07 and are nearly useless as a progress signal — each is a single micro-batch, and the mixture is heterogeneous enough that a batch of two multilingual Aya examples and a batch of two GSM8K solutions are simply different problems. The held-out loss on a fixed validation split is the number to trust, which is why the loop computes one before training starts. And 676 candidate examples were skipped for exceeding 1024 tokens, so the training set is biased toward short responses — a real limitation of the budget, and a plausible contributor to one of the failures below.
+
+**Failure modes encountered, recorded rather than cleaned up:** none of the dramatic ones, as it happens. No OOM at batch 2; the loss moved from the first step; `print_trainable_parameters()` matched the hand arithmetic, so the adapters were attached. The one bug worth reporting is in the harness rather than the training: logging `float(out.loss)` on a tensor that still requires grad produces a `UserWarning` about converting a tensor with `requires_grad=True` to a scalar, and the fix is `out.loss.detach().item()`. Worth doing, because the warning is telling you that you are holding a reference to the autograd graph in a list of logging history.
 
 ---
 
 ## Evaluation
-
-> **Status: two of three models measured.** The base and official-SFT columns below are
-> real. Our own fine-tune does not exist yet, so its column is `TODO`.
 
 ### What we are comparing
 
 | Model | Role |
 | --- | --- |
 | `allenai/OLMo-2-0425-1B` | base — the "before" |
-| base + our LoRA adapter, N examples | the "after," on a hobbyist budget |
+| base + our LoRA adapter, 4,000 examples | the "after," on a 22-minute budget |
 | `allenai/OLMo-2-0425-1B-SFT` | the official SFT, 866,138 examples — the ceiling for this stage |
 
-The expected ordering, stated in advance so that reporting it is not optional: ours should land between base and official SFT on format and stopping, and may be *worse* than base on knowledge benchmarks. If it comes out otherwise, that goes in the post along with an attempt to find out why.
+The expected ordering was stated in advance so that reporting it would not be optional: ours should land between base and official SFT on format and stopping. It does, on the headline numbers. The interesting part is where it does not.
 
 Controls: identical prompts, sampling parameters, and seeds across all three, enforced by running the same script with a different `--model`. The base model is prompted raw, because it has no chat template to prompt it through; the post-trained checkpoints are prompted through theirs. That asymmetry is not a flaw in the comparison, it *is* the comparison — "can be addressed through a chat template" is one of the things SFT installs.
 
 ### What SFT actually bought
 
-Experiments G and H re-run on the official SFT checkpoint, everything else held fixed:
+Experiments G and H re-run on all three models, everything else held fixed:
 
-| | Base | Official SFT |
+| | Base | Ours (4k, LoRA) | Official SFT (866k) |
+| --- | --- | --- | --- |
+| **Stopping rate (G)** | 13/48 = 27.1% | 36/48 = 75.0% | **40/48 = 83.3%** |
+| **Format compliance (H)** | 9/64 = 14.1% | 36/64 = 56.2% | **62/64 = 96.9%** |
+|   answer in one word | 0/24 = 0% | 16/24 = 66.7% | 24/24 = 100% |
+|   valid JSON | 4/16 = 25% | **14/16 = 87.5%** | 14/16 = 87.5% |
+|   exactly three bullets | 0/16 = 0% | **0/16 = 0%** | 16/16 = 100% |
+|   no commas | 5/8 = 62.5% | 6/8 = 75.0% | 8/8 = 100% |
+
+Our 4,000-example adapter captures most of the stopping improvement — 75% against the official 83% — and about half the format improvement. For 22 minutes of compute and 0.5% of the data, landing between the two endpoints is the result the post predicted.
+
+Two cells deserve attention. On JSON our fine-tune **matches the official checkpoint exactly**, 14/16 both. And on three-bullet lists it scores **0/16, identical to the untouched base model**, against the official checkpoint's perfect 16/16. That is not a small shortfall, it is a total failure to acquire one specific capability, and it is the clearest thing in the whole experiment.
+
+Here is what ours produces when asked for three bullets:
+
+> Red, blue, and yellow are the primary colors.
+
+Correct content, correct assistant register, formatting instruction completely ignored. Compare it to the base model, which produced an endless unformatted ramble, and to the official checkpoint, which produces three bullets. Our model learned to *answer like an assistant* without learning to *comply with a constraint*, and those turn out to be separable things.
+
+Why bullets specifically? Counting what our uniform random sample actually drew makes this answerable rather than speculative:
+
+| Examples | % of our 4,000 | Source |
 | --- | --- | --- |
-| **Stopping rate (G)** | 13/48 = 27.1% | **40/48 = 83.3%** |
-| **Format compliance (H)** | 9/64 = 14.1% | **62/64 = 96.9%** |
-|   answer in one word | 0/24 = 0% | 24/24 = 100% |
-|   valid JSON | 4/16 = 25% | 14/16 = 87.5% |
-|   exactly three bullets | 0/16 = 0% | 16/16 = 100% |
-|   no commas | 5/8 = 62.5% | 8/8 = 100% |
+| 535 | 13.4% | `evol_codealpaca_heval_decontaminated` |
+| 511 | 12.8% | `flan_v2_converted` |
+| 466 | 11.7% | `tulu_v3.9_aya_100k` |
+| 321 | 8.0% | `numinamath_tir_math_decontaminated` |
+| 286 | 7.1% | `wildguardmixtrain_decontaminated_50k` |
+| 279 | 7.0% | `tulu_v3.9_open_math_2_gsm8k_50k` |
+| 249 | 6.2% | `wildjailbreak_decontaminated_50k` |
+| 239 | 6.0% | `tulu_v3.9_wildchat_100k` |
+| 195 | 4.9% | `personahub_code_v2_34999` |
+| **158** | **4.0%** | **`personahub_ifdata_manual_seed_v3_29980`** |
+| 63 | 1.6% | `coconot_converted` |
+| ... | | 6 further sources below 1.6% |
+
+The bolded row is Tülu 3's precise-instruction-following subset — the one that teaches "exactly three bullets," "no commas," "answer in one word." The full mixture has 29,980 of them. We drew **158**.
+
+So the mechanism is not that our sample lacked instruction-following data; it is that 158 examples was enough to reach 66.7% on one-word answers and 75% on the no-commas constraint, and not enough to reach anything at all on three-bullet lists. Formatting constraints are not learned as a single faculty. The cheap ones — answer briefly, avoid a character — came almost free. "Emit exactly three lines each beginning with `- `" did not, and 676 of our candidate examples being dropped for length biased the set further away from formatted lists.
+
+Confirming this properly would mean training a second adapter on a constraint-weighted sample rather than a uniform one, which is exactly the work that the mixture-ratio tuning in the Tülu 3 paper exists to do, and exactly the work we skipped by calling `.shuffle()`.
 
 Format compliance goes from 14% to 97%, and the two constraints the base model never once satisfied — one-word answers and three bullets — are now satisfied every single time. The bare-instruction experiment is transformed just as completely: where the base model continued writing the assignment at all eight seeds, the SFT model writes a poem at all eight and terminates at all eight.
 
@@ -1166,17 +1227,25 @@ Experiment B says the same thing less amusingly. Asked for a moving average, the
 
 **It cost measurable ground on the pretraining objective.** This is the alignment tax, and it is visible in three numbers:
 
-| Perplexity on | Base | Official SFT |
-| --- | --- | --- |
-| 169 tokens of ordinary prose | **9.19** | 11.48 |
-| the same words, shuffled | 392.45 | 565.95 |
-| one token repeated sixty times | **4.37** | **26,313.75** |
+| Perplexity on | Base | Ours (4k, LoRA) | Official SFT (866k) |
+| --- | --- | --- | --- |
+| 169 tokens of ordinary prose | **9.19** | 9.28 | 11.48 |
+| the same words, shuffled | 392.45 | 393.19 | 565.95 |
+| one token repeated sixty times | **4.37** | **3.46** | **26,313.75** |
 
-The first row is a 25% increase in perplexity on perfectly ordinary expository prose. The SFT model is simply worse at the thing the base model was trained to do, which is what you would expect from a model whose training distribution was narrowed from "all text" to "assistant responses."
+Read the first row across: the official checkpoint pays a 25% perplexity increase on perfectly ordinary expository prose, while ours pays essentially nothing (9.28 against 9.19). The official SFT model is measurably worse at the thing the base model was trained to do, which is what you would expect from a model whose training distribution was narrowed from "all text" to "assistant responses." Our adapter barely moved that distribution at all.
 
-The third row is the striking one, and it reframes the loops we saw earlier. Degenerate repetition is *more probable than real prose* for the base model (4.37) and essentially impossible for the SFT model (26,314) — a factor of six thousand. Post-training did not merely teach the SFT model to stop; it taught it that well-formed text does not degenerate, which is why instruct models do not loop under greedy decoding and base models reliably do. Experiment B's quadruple-printed function and the base model's `the the the the` perplexity of 4.37 are the same fact measured two ways.
+The third row is where this becomes the most informative table in the post. Degenerate repetition is *more probable than real prose* for the base model (4.37) and essentially impossible for the official SFT model (26,314) — a factor of six thousand. Post-training did not merely teach it to stop; it taught it that well-formed text does not degenerate, which is why instruct models do not loop under greedy decoding and base models reliably do. Experiment B's quadruple-printed function and that 4.37 are the same fact measured two ways.
 
-So SFT traded general-purpose density estimation for a much sharper prior on well-formed responses. That is a good trade for an assistant and a bad one for a language model, and it is the reason the base checkpoints remain the right starting point for anyone who wants to post-train differently.
+And our fine-tune sits at **3.46** — not between the two, but *past the base model in the wrong direction*. Four thousand examples of LoRA did not begin to reshape the underlying distribution. That single number predicts a failure we can then go and observe: asked for a haiku, one of our eight seeds produces
+
+> recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursion, ...
+
+which the official checkpoint never does at any seed. The three perplexity columns say, quantitatively, what our fine-tune is: a thin behavioral veneer over an unchanged base model. It has learned the shape of a response — the register, the template, when to emit the end token most of the time — while the distribution underneath is still the base model's, degeneracy and all.
+
+That is the real lesson of the comparison, and it is a more precise claim than "more data is better." SFT at 866k examples *redistributes*; LoRA at 4k *decorates*. Both improve the behavior you measure with a format checker. Only one of them changes what the model thinks text looks like.
+
+It also explains the alignment tax asymmetry. Our fine-tune pays almost no perplexity penalty precisely *because* it changed so little — the tax and the benefit are the same transaction, and you cannot have one without the other.
 
 **TODO(run):** a capability benchmark that is not about format — a GSM8K or MMLU subset — to put a number on the knowledge side of the tax rather than inferring it from the banana.
 
@@ -1194,13 +1263,69 @@ It is worth putting that table next to the one measured above, because they disa
 
 ### Qualitative
 
-The same prompts from the base-model experiments, run on all three models, quoted verbatim and untruncated. **TODO(run).** This is the part readers actually read. It should include at least one case where our fine-tune is clearly worse than the official SFT, with a guess at the cause — data volume, rank, or a single epoch.
+The bare instruction — `Write a haiku about recursion.`, sampled, eight seeds — side by side. The base model, at every seed, continued writing the assignment:
+
+> A haiku is a poem of seventeen syllables, with five syllables in the first line...
+
+The official SFT checkpoint, at every seed, wrote a poem and stopped:
+
+> Recursion's call, / A loop in its own tail, / A game of cat and mouse.
+
+Ours is the interesting column, because it is neither:
+
+```
+seed 0  I'm sorry, but I can't assist with that request. Recursion is a programming technique...
+seed 2  Here's a haiku about recursion: / Recursive recursion is a powerful technique in programming...
+seed 4  Recursion is a programming technique that involves a function calling itself repeatedly...
+seed 5  I'm sorry, but I can't help you with that. Recursion is a programming concept...
+seed 7  recursion, recursion, recursion, recursion, recursion, recursion, recursion, ...
+```
+
+It has unmistakably acquired the assistant voice — "Here's a haiku about recursion:" is a sentence no base model wrote — and then it fails in three distinct ways. It explains recursion instead of versifying it. It degenerates at seed 7. And at two of eight seeds it *refuses*, apologetically and for no reason.
+
+That refusal is the most instructive failure in the experiment, because it is not random damage — it is a known SFT pathology, reproduced here at 1/200th of the official data budget, and the source table above says precisely why. Three of the subsets we sampled are refusal-shaped: `wildguardmixtrain` (286 examples), `wildjailbreak` (249), and `coconot`, whose entire purpose is contextually appropriate non-compliance (63). That is **598 examples, 15% of our training data**, whose modal response begins "I'm sorry, but I can't."
+
+Fifteen percent is apparently enough to teach a 1.5B model to apologize for a poem. The official checkpoint trains on the same subsets, in the same nominal proportion, and does not do this — because alongside them sit 800,000 examples of cheerfully complying with harmless requests, which is the signal that tells a model where the boundary is. Take the safety data without the counterweight and you do not get a safer model, you get a model that has learned that refusing is a normal thing to do.
+
+This is the single best argument in the post for why mixture ratios are a research problem rather than a bookkeeping detail, and we demonstrated it by accident, by calling `.shuffle()` and taking the first 4,000.
+
+Code completion shows the same veneer-over-base-model pattern more mildly. Ours produces a tidy, commented, correctly-stopping function:
+
+```python
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given window size."""
+
+    # Initialize the moving average
+    moving_average = list()
+
+    # Iterate over the list xs
+    for x in xs:
+        # Calculate the moving average
+        moving_average.append(x / window)
+
+    return moving_average
+```
+
+It is the only one of the three models that stopped at the end of the function rather than running on. It is also still wrong, and wrong in the identical way the base model was wrong — `x / window` — which is exactly what the perplexity table predicts. The behavior changed; the knowledge did not.
+
+One small consolation, and a reminder not to read too much into any single generation: asked the one-word banana question, ours answers `Banana is yellow.` — the wrong *format* but the right *colour*, where the official checkpoint confidently answered `Orange`.
 
 ### What this does and does not show
 
-The limits, stated plainly: tiny evaluation sets, no significance testing, one seed per cell unless budget allows more, LoRA is not full SFT, and our few thousand examples are a sample from a mixture that was itself carefully balanced.
+The limits, stated plainly. The evaluation sets are tiny — 48 generations for the stopping rate, 64 for format compliance — so a difference of a few percent means nothing, though the differences that carry the argument here are 20 to 90 points wide. Eight seeds per prompt is enough to see a distribution and not enough for a confidence interval. There is one training run at one seed with no hyperparameter search, so "LoRA at rank 16 on 4,000 examples" is one point in a space, not a characterization of LoRA. Perplexity is measured on three short passages rather than a corpus. And the format checkers are mechanical, which makes them reproducible and also gameable: `no_commas` can be satisfied by accident, and nothing in the suite rewards a *good* answer.
 
-The claim the post is entitled to make: supervised instruction tuning measurably changes *how a model responds to a request*, with a few thousand examples and an hour of GPU time. It does not make the model smarter.
+Most importantly, we never measured capability directly. The claim that SFT does not make the model smarter rests on code completion failing identically before and after, on a wrong-but-well-formatted banana, and on a perplexity table — not on a benchmark.
+
+**TODO(run):** a GSM8K or MMLU subset across all three models, to put a number on that rather than an argument.
+
+What the post is entitled to claim, on this evidence:
+
+- Supervised instruction tuning reliably and dramatically changes *how* a model responds: stopping went 27% → 83%, format compliance 14% → 97%, and the base model's inability to answer a bare instruction at any of eight seeds became an ability to do so at all eight.
+- It does not appear to change what the model knows. Every failure of correctness we could check survived the transition, and one of them got worse.
+- A few thousand examples and twenty-two minutes buys a substantial fraction of the behavioral change — three quarters of the stopping improvement — but buys it as a veneer. The repetition perplexity of 3.46 against the official 26,314 says our adapter left the underlying distribution essentially untouched.
+- Data composition matters more than data volume at small scale, and in both directions. 158 instruction-following examples were enough for one-word answers and not for bullet lists; 598 safety examples without a counterweight produced spurious refusals. Neither of those is a volume problem, and neither would be visible without the mixture's composition being public.
+
+That last point is the one I did not expect to be writing. The experiment was designed to show that instruction tuning is a smaller change than it is usually described as, and it does show that. But the thing that actually determined our model's behavior was not the architecture, the rank, the learning rate, or even the amount of data. It was which 4,000 examples we happened to draw.
 
 ---
 
@@ -1310,6 +1435,15 @@ Carried over from the outline and corrected in the prose:
 - **Structure.** Three papers as the spine: GPT-1 for the architectural turn and adaptation, GPT-2 for what a base model is, OLMo 2 for a current model. This replaces the outline's thematic ordering and is what the post is organized around now.
 - **Toy task** (outline open question 1): reversal reformatted as one stream, with a `SEP` token, for continuity with the previous post and because `SEP` previews the chat template. Tiny-Shakespeare dropped rather than kept as an aside — the "it generates text" demo is better served by the real OLMo base model in the experiments section.
 - **Training code** (open question 2): hand-rolled loop first, `SFTTrainer` after as the production equivalent. Still worth revisiting once the loop is written.
+
+## Findings the plan did not anticipate
+
+Worth keeping separate from the corrections, because these are things the experiments produced rather than things the draft got wrong.
+
+1. **Our fine-tune is a veneer, and perplexity proves it.** Repetition perplexity: base 4.37, ours 3.46, official SFT 26,313. Four thousand LoRA examples left the underlying distribution untouched — slightly *more* degenerate than base — while installing most of the surface behavior (75% of the official stopping rate). The alignment tax asymmetry follows: ours pays almost none (9.28 vs base 9.19) precisely because it changed almost nothing. "SFT redistributes, LoRA decorates" is the sharpest claim in the post and it came out of a control sample I added as an afterthought.
+2. **Base-model loops are a distribution fact, not a decoding artifact.** `the the the the` scores perplexity 4.37 against 9.19 for real prose — repetition is *more probable than language*. That explains Experiment B's quadruple-printed function, and it explains why instruct models do not loop. Greedy decoding exposes loops rather than causing them.
+3. **Data composition dominated everything at this scale.** 158 instruction-following examples sufficed for one-word answers (66.7%) and bought literally nothing on three-bullet lists (0/16, identical to base). 598 refusal-shaped examples — 15% of the sample, across three subsets I had not thought to count — produced spurious apologetic refusals on a request to write a poem. Both are composition effects, not volume effects, and neither is visible unless the mixture's provenance is public. This is now the post's closing argument.
+4. **Format compliance is not one faculty.** Cheap constraints (brevity, avoiding a character) transferred nearly free; "exactly three lines starting with `- `" did not transfer at all. The single aggregate score hid this completely until broken out per constraint.
 
 ## Still open
 

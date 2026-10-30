@@ -1,0 +1,41 @@
+loading mixture ...
+single-turn examples available: 823,278
+train 4,000  val 200  skipped 676 (too long or span mismatch)
+tokens: 1,555,866 total, 1,028,048 scored (66.1% of the loss)
+
+masked example (prompt positions shown as ·):
+······································································································································To solve this problem, let's use Python and SymPy to evaluate the given expressions for \( x \) and \( y \). 
+
+Given:
+\[ x = \frac{-1 + \sqrt{3} \, \mathrm{i}}{2} \]
+\[ y = \frac{-1 - \sqrt{3} \, \mathrm{i}}{2} \]
+
+We need to verify the following equations:
+A. \( x^{3} + y^{5} = -1 \)
+B. \( x^{7} + y^{7} = -1 \)
+C. \( x^{9} + y^{9} = -1 \)
+D. \( x^{11} + y^{11} = -1 \)
+
+Let's implement this step-by-step in Python using SymPy:
+
+1. Define \( x \) and \( y \) using
+
+trainable params: 12,058,624 || all params: 1,496,975,360 || trainable%: 0.8055
+optimizer steps: 250 (effective batch 16)
+
+held-out loss before training: 1.4419
+step    1/250  loss 1.0379  lr 1.43e-05  peak 10.96 GiB  4s
+step   25/250  loss 1.0802  lr 9.87e-05  peak 11.65 GiB  95s
+step   50/250  loss 1.0941  lr 9.25e-05  peak 11.72 GiB  204s
+step   75/250  loss 0.9009  lr 8.19e-05  peak 11.81 GiB  329s
+step  100/250  loss 2.0671  lr 6.80e-05  peak 11.81 GiB  456s
+step  125/250  loss 1.7153  lr 5.23e-05  peak 11.81 GiB  584s
+step  150/250  loss 1.1064  lr 3.63e-05  peak 11.81 GiB  717s
+step  175/250  loss 0.9011  lr 2.17e-05  peak 11.81 GiB  864s
+step  200/250  loss 0.8148  lr 1.01e-05  peak 11.83 GiB  997s
+step  225/250  loss 1.4840  lr 2.59e-06  peak 11.83 GiB  1141s
+step  250/250  loss 0.5179  lr 0.00e+00  peak 11.83 GiB  1286s
+
+held-out loss after training:  1.2452
+wall clock: 21.9 min   peak VRAM: 11.83 GiB
+adapter saved to out/lora

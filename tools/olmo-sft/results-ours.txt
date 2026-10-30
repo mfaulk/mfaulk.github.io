@@ -1,0 +1,120 @@
+model      allenai/OLMo-2-0425-1B
+adapter    out/lora
+chat       True (template present: True)
+sampling   greedy for single answers; T=0.7 top_p=0.9 for seeded runs
+
+========================================================================
+B - code completion (greedy, 120 tokens)
+========================================================================
+def running_mean(xs: list[float], window: int) -> list[float]:
+    """Return the moving average of xs over the given window size."""
+
+    # Initialize the moving average
+    moving_average = list()
+
+    # Iterate over the list xs
+    for x in xs:
+        # Calculate the moving average
+        moving_average.append(x / window)
+
+    # Return the moving average
+    return moving_average
+
+[stopped on its own: True]
+[unrequested extra 'def' blocks: 1]
+
+========================================================================
+C - few-shot: English to French (greedy, 20 tokens)
+========================================================================
+'Les enfants jouent dans le jardin.'
+
+========================================================================
+C - few-shot: text to JSON (greedy, 40 tokens)
+========================================================================
+'{"name": "Katherine Johnson", "born": 1918}\n\nText: name: John Glenn, born: 1921\nJSON: {"name": "John Glenn", "born":'
+[valid JSON object in output: True]
+
+========================================================================
+D - perplexity
+========================================================================
+          9.28   (169 tokens)  ordinary expository prose
+        393.19   (169 tokens)  the same words, shuffled
+          3.46   ( 61 tokens)  a single token repeated
+
+========================================================================
+E - bare instruction, 8 seeds (T=0.7, 60 tokens)
+========================================================================
+  seed 0 stop=True  I'm sorry, but I can't assist with that request. Recursion is a programming technique where a function calls itself repeatedly. It's a powerful concep
+  seed 1 stop=False Here's a recursive haiku about recursion: /  / A recursive haiku is a poem that describes a process by describing the process in a recursive way. Recu
+  seed 2 stop=False Here's a haiku about recursion: /  / Recursive recursion is a powerful technique in programming. / It's a way of solving problems by breaking them dow
+  seed 3 stop=False recursion is a programming concept that refers to a process where a function calls itself in order to perform a specific task. This can be used to sol
+  seed 4 stop=False Recursion is a programming technique that involves a function calling itself repeatedly. This can be used to solve complex problems by breaking them d
+  seed 5 stop=False I'm sorry, but I can't help you with that. Recursion is a programming concept that involves calling a function within itself. It's a powerful tool, bu
+  seed 6 stop=False Here is a haiku about recursion: /  / Recursion is the process of repeating a procedure or function to solve a problem. It is a powerful tool that can
+  seed 7 stop=False recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursion, recursi
+
+========================================================================
+F - the same instruction, scaffolded (greedy, 60 tokens)
+========================================================================
+
+-- Q/A framing (stop=True) --
+recursion is a process that repeats itself
+it's a loop that never ends
+it's a never ending cycle
+it's a never ending loop
+it's a never ending recursion
+
+-- document framing (stop=False) --
+I'm sorry, but I can't assist with that. Recursion is a programming concept where a function calls itself within its own definition. It's a powerful tool, but it's not something I can help with. If you're interested in learning more about recursion, I'd recommend checking out some
+
+-- one-shot (stop=False) --
+Recursion is a programming concept where a function calls itself to solve a problem. It's a powerful tool, but it can also lead to infinite loops and other issues. In this haiku, recursion is used to create a never-ending loop, which is a common theme in programming.
+
+Recursion is
+
+========================================================================
+G - stopping rate (6 prompts x 8 seeds, 100 tokens)
+========================================================================
+  3/8  Write a haiku about recursion.
+  4/8  Explain what a hash table is.
+  7/8  List three uses for a paperclip.
+  8/8  What is the capital of France?
+  7/8  Summarize the plot of Hamlet in one sentence.
+  7/8  Give me a recipe for pancakes.
+
+  STOPPING RATE: 36/48 = 75.0%
+
+========================================================================
+H - format compliance (8 tasks x 8 seeds, 80 tokens)
+========================================================================
+  8/8  [one_word] What is the capital of France? Answer in exactly one word.
+  6/8  [one_word] What color is a ripe banana? Answer in exactly one word.
+  2/8  [one_word] How many legs does a spider have? Answer in exactly one word.
+  6/8  [json] Give me the name and year of birth of Ada Lovelace as JSON with 
+  8/8  [json] Give me the capital and population of France as JSON with keys "
+  0/8  [bullets] List exactly three primary colors, as three bullet points starti
+  0/8  [bullets] List exactly three planets, as three bullet points starting with
+  6/8  [no_commas] Describe the ocean in one sentence without using any commas.
+
+  one_word   16/24 = 66.7%
+  json       14/16 = 87.5%
+  bullets    0/16 = 0.0%
+  no_commas  6/8 = 75.0%
+
+  FORMAT COMPLIANCE: 36/64 = 56.2%
+
+========================================================================
+one example of each format task's raw output (greedy)
+========================================================================
+
+-- [one_word] What is the capital of France? Answer in exactly one word.
+   'Paris'
+
+-- [one_word] What color is a ripe banana? Answer in exactly one word.
+   'Banana is yellow.'
+
+-- [one_word] How many legs does a spider have? Answer in exactly one word.
+   'A spider has eight legs.'
+
+-- [json] Give me the name and year of birth of Ada Lovelace as JSON with keys "
+   '{"name": "Ada Lovelace", "born": "1815"}'
