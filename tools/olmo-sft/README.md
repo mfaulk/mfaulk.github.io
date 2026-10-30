@@ -83,9 +83,9 @@ Two results worth knowing before rerunning:
 Caveat on `results-base.txt` and `results-sft.txt`: their experiment D sections
 predate a fix. The original perplexity samples were ~35 tokens, short enough
 that the first few positions dominate the average and the number is noise (it
-read 213 where the current 169-token passage reads 9.19). `PERPLEXITY_SAMPLES` was replaced and the
-table above holds the corrected figures; the D section inside the saved captures
-does not.
+read 213 where the current 169-token passage reads 9.19). `PERPLEXITY_SAMPLES`
+was replaced and the table above holds the corrected figures; the D sections
+inside those saved captures do not.
 
 Two measurement caveats worth carrying forward:
 
