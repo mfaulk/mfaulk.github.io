@@ -69,3 +69,19 @@ per figure. They need only the standard library:
 Regenerating without changing a script rewrites identical bytes, so a clean
 `git status` afterwards confirms the committed SVGs match their generators. See
 `tools/figures/README.md` for the conventions they follow.
+
+
+## Experiment code
+
+Some posts quote measured results. The code that produces them lives alongside
+the figures, one directory per post section, so the numbers can be regenerated
+rather than trusted:
+
+- `tools/toy-lm/` — the from-scratch decoder-only language model and the
+  sequence-reversal task it is trained on. Needs only `torch`.
+- `tools/olmo-sft/` — the OLMo 2 1B probes and instruction-tuning experiments.
+  Needs a GPU and the Hugging Face stack; see that directory's README for the
+  virtualenv setup and pinned versions.
+
+Each directory's README records the measured results, so a rerun can be checked
+against what the post claims.

@@ -308,8 +308,6 @@ Also worth noting: GPT-1 chose BooksCorpus over the 1B Word Benchmark, which is 
 
 ## Training the Thing We Just Built
 
-> **Status: this experiment has not been run yet.** The numbers below are `TODO`.
-
 Before scaling up, it is worth confirming that `CausalLM` actually works, on a task we already know an encoder-decoder transformer can solve. That gives a controlled comparison: same task, same rough parameter budget, one architecture against the other.
 
 ### The toy task, reformatted as one stream
@@ -324,9 +322,54 @@ The model is trained on the whole stream with the ordinary next-token loss, and 
 
 This reformatting is the entire conceptual content of the architectural transition, in a form small enough to hold in your head. Nothing about the task changed. What changed is that the "input" is now a prefix rather than a separate tensor, and the boundary between input and output is a token rather than a dataflow edge. That `SEP` token is a chat template with one field — and when we get to `<|user|>` and `<|assistant|>` later, they will be doing precisely this job.
 
-**TODO(run):** train it, and report parameter count, loss curve, and exact-match accuracy against the previous post's 256/256. Report whether the decoder-only model matches the encoder-decoder at comparable size, and if it does not, say so. Do not guess this — the decoder-only model sees the source through a causal mask rather than a bidirectional encoder, which is a real handicap on a task that requires looking at the whole input before producing the first output token, and it may well need more capacity or more steps to compensate.
+### It works, at 43% of the parameters
 
-**TODO(figure):** loss curves for the two architectures on the same task, or a side-by-side accuracy bar.
+Same hyperparameters as the previous post — `d_model=128`, 4 heads, `d_ff=512`, 2 layers, 6000 steps, the same Noam schedule — and the same evaluation, 256 held-out sequences scored on exact match:
+
+```
+parameters     398,336   (encoder-decoder post: 930,828)
+step     1  loss 6.1046  exact-match 0/256
+step  1000  loss 1.0876  exact-match 247/256
+step  2000  loss 1.0584  exact-match 253/256
+step  3000  loss 1.0714  exact-match 256/256
+step  6000  loss 1.0486  exact-match 255/256
+
+FINAL exact-match on 256 held-out sequences: 256/256
+```
+
+The decoder-only model solves the task completely, matching the encoder-decoder's 256/256, using **398,336 parameters against 930,828** — 43% of the size. Deleting the encoder removed two of the four transformer blocks; deleting cross-attention removed a sublayer from each of the remaining two; collapsing two embedding tables into one tied table removed the rest.
+
+I had expected to have to report a handicap here, and wrote as much in the outline: a decoder-only model sees the source through a causal mask rather than a bidirectional encoder, which ought to hurt on a task that requires knowing where the input *ends* before emitting the first output token. It does not hurt measurably. The model can see the whole prefix including `SEP` by the time it needs to produce the first answer token, and that is apparently enough.
+
+### Why the loss stalls at 1.05
+
+The accuracy is perfect and the loss is stuck just above 1.0, which looks like a contradiction until you ask what the loss is averaged over. The stream is half unpredictable by construction: the input symbols are drawn uniformly from eight possibilities, and nothing in the prefix predicts them. Those positions contribute $\ln 8 = 2.079$ nats each and can never do better. The answer half is fully determined and goes to nearly zero. Average the two halves:
+
+$$
+\frac{\ln 8}{2} = 1.0397
+$$
+
+against a measured 1.0486. The loss is not stalled; it is sitting on its floor, and the floor is the entropy of the prompt.
+
+This is worth seeing before the next section argues for masking the prompt out of the loss, because it is the cleanest possible illustration of *why*. Training the identical model with the loss restricted to the answer span:
+
+```
+loss computed  answer span only
+step  1000  loss 0.1813  exact-match 223/256
+step  3000  loss 0.0397  exact-match 253/256
+step  6000  loss 0.0323  exact-match 256/256
+
+FINAL exact-match on 256 held-out sequences: 256/256
+```
+
+Same architecture, same seed, same final accuracy — and a loss of 0.03 instead of 1.05. Two conclusions, and the second one matters more than the literature's usual framing suggests:
+
+1. **Masking makes the number mean something.** 1.05 and 0.03 describe the same model. The first averages in an irreducible constant; the second measures only what the model was supposed to learn. If you are watching a loss curve to decide whether training is working, you want the second.
+2. **Masking did not change what the model learned.** Both runs ended at 256/256. The masked run was in fact slightly *slower* to get there early on (223/256 against 247/256 at step 1000), which is plausible — the prompt tokens are extra gradient signal for the embedding table even if their content is noise — though at one seed that is a hint rather than a finding.
+
+So response-token masking is a measurement decision more than a learning one, at least here. The argument for it at scale is stronger, and the next section gives it, but it is useful to know that the mechanism is not magic.
+
+**TODO(figure):** the two loss curves on one axis, with the $\ln 8 / 2$ floor drawn as a horizontal line.
 
 ### Generation, sampling, and the KV cache
 
@@ -922,7 +965,7 @@ def build_example(tok, messages, max_len):
 
 Two smaller decisions, each worth a sentence in the final post:
 
-- **Is masking necessary?** It is standard and well-motivated, but the measured effect depends on the data. **TODO(optional):** train one variant without it and compare. Stretch goal, only if the length budget allows.
+- **Is masking necessary?** The toy ablation earlier in this post says it is not necessary for *learning* — both variants reached 256/256 — but that it is what makes the loss curve interpretable. The argument above, about not spending capacity modeling synthetic user turns, is the one that should hold at scale where the prompts are not uniform noise. **TODO(optional):** repeat the ablation on the real fine-tune if the budget allows, since the toy result does not transfer automatically.
 - **Packing versus padding.** Short examples can be concatenated to fill the context window, which is far more efficient but risks cross-contamination between unrelated examples unless attention is blocked at the boundaries. We will pad and keep it simple, and say so.
 
 ---
