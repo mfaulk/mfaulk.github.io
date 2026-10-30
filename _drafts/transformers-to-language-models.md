@@ -518,7 +518,18 @@ $$
 2(205{,}520{,}896) + 1{,}073{,}872{,}896 + 2048 = 1{,}484{,}916{,}736
 $$
 
-That is exactly the parameter count the Hugging Face repository reports, which is a satisfying confirmation that nothing is hiding in the model we have not accounted for. It also shows what "1B" names: the transformer blocks hold 1.07B parameters, and the vocabulary tables add another 411M on top — 28% of the model, spent on getting tokens in and out of it.
+Which is exactly what the loaded model reports:
+
+```python
+>>> total = sum(p.numel() for p in m.parameters())
+>>> emb = m.get_input_embeddings().weight.numel() + m.lm_head.weight.numel()
+>>> f"{total:,}", f"{emb:,}", f"{total - emb - m.model.norm.weight.numel():,}"
+('1,484,916,736', '411,041,792', '1,073,872,896')
+```
+
+A satisfying confirmation that nothing is hiding in this model we have not accounted for. It also shows what "1B" names: the transformer blocks hold 1.07B parameters, and the vocabulary tables add another 411M on top — 28% of the model, spent on getting tokens in and out of it.
+
+In bf16 those weights occupy 2.77 GiB of VRAM, which is the number to keep in mind for the rest of the post: inference is comfortable on any modern card, and it is the optimizer state, not the weights, that will shortly become the problem.
 
 ### What changed since GPT-2
 
@@ -587,30 +598,41 @@ One branch computes a value, the other computes a multiplicative gate, and their
 OLMo 2 uses a 100,352-token byte-level BPE vocabulary — double GPT-2's, which is typical, driven by code and multilingual text. The interface is the same one GPT-2 introduced, and the behavior it is most important to see for yourself is that token boundaries are not word boundaries:
 
 ```python
-from transformers import AutoTokenizer
-
-tok = AutoTokenizer.from_pretrained("allenai/OLMo-2-0425-1B")
-
-ids = tok("Tokens are not words.")["input_ids"]
-print(ids)
-print([tok.decode([i]) for i in ids])
+>>> from transformers import AutoTokenizer
+>>> tok = AutoTokenizer.from_pretrained("allenai/OLMo-2-0425-1B")
+>>> ids = tok("Tokens are not words.")["input_ids"]
+>>> ids
+[30400, 527, 539, 4339, 13]
+>>> [tok.decode([i]) for i in ids]
+['Tokens', ' are', ' not', ' words', '.']
 ```
 
-**TODO(run):** paste real output. Make the leading-space point concrete by also printing `tok("the")["input_ids"]` against `tok(" the")["input_ids"]`.
+Five words, five tokens, and four of them carry their leading space as part of the token. The consequence GPT-2's space exception implies is directly visible:
 
-Two numbers from the config are worth remembering because they will matter when we build training batches: the end-of-text token is id 100257 and the padding token is id 100277. The model's `eos_token` and `bos_token` are the *same* string, `<|endoftext|>` — a document separator doing double duty as both boundary markers.
+```python
+>>> tok("the")["input_ids"], tok(" the")["input_ids"]
+([1820], [279])
+```
+
+Different words, as far as the model is concerned — different ids, different embedding rows, no relationship between them except whatever training taught. This is why forcing a model to emit an exact string is fiddlier than it sounds, and why token counts never quite match word counts.
+
+Two numbers matter when we build training batches: the end-of-text token is id 100257 and the padding token is 100277. The `eos_token` and `bos_token` are the *same* string, `<|endoftext|>` — a document separator doing double duty as both boundary markers.
+
+One last discrepancy worth resolving, since we just counted parameters with it. The tokenizer reports 100,278 entries, but the model's embedding matrices have 100,352 rows — the number used in the arithmetic above. The extra 74 rows are padding: 100,352 is $784 \times 128$, and matrix dimensions that are multiples of 128 are substantially faster on tensor cores. So the model carries 74 embedding rows it can never be asked to produce, bought in exchange for an aligned matmul. Using the tokenizer's 100,278 would have given a parameter total that did not match the published figure.
 
 ---
 
 ## What the Base Model Can and Cannot Do
 
-> **Status: these experiments have not been run yet.** Every number and every quoted
-> generation in this section is a `TODO`. Nothing here is invented or guessed.
+> **Status: one result in, the rest unrun.** The generation quoted below is real output
+> from the real checkpoint. Everything still marked `TODO` has not been run, and nothing
+> here is invented or guessed.
 
-There is one more fact about the base checkpoint that is more telling than anything in its config file. Its `tokenizer_config.json` contains:
+There is one more fact about the base checkpoint that is more telling than anything in its config file:
 
 ```python
-chat_template = None
+>>> AutoTokenizer.from_pretrained("allenai/OLMo-2-0425-1B").chat_template is None
+True
 ```
 
 The SFT checkpoint has one. The base checkpoint does not. There is no notion of a user, an assistant, or a turn anywhere in the base model's interface, because nothing in pretraining put one there. It is a document continuation engine, and the only thing you can hand it is a prefix.
@@ -619,7 +641,15 @@ The experiments below are designed to find out what that is and is not good for.
 
 ### It is a very good next-token predictor
 
-- **Experiment A — prose continuation.** A few sentences of prose as prefix. Expect fluent, on-topic, grammatical text that does not stop on its own. **TODO(run)** — show the output untruncated, including the run-on.
+**Experiment A — prose continuation.** Greedy decoding, `max_new_tokens=40`, prefix `"The capital of France is"`:
+
+> The capital of France is Paris. The French language is spoken in France. The French people are known as the French. The French flag is red with a white cross on a blue background. The French government is a republic.
+
+Everything the framing at the top of this post promised is visible in three sentences. It knows the answer — "Paris" is the very next token. It is fluent and grammatical throughout. It does not stop; that output is truncated by the 40-token cap, not by the model. It drifts steadily toward the generic, each sentence a little emptier than the last ("The French people are known as the French"). And by sentence four it is confidently wrong — the French flag is a blue, white and red vertical tricolour, nothing like what it says.
+
+Not one of those failures is a knowledge failure. They are all the same failure: this is a model continuing a document, and a document about France plausibly contains more sentences about France, so it produces more sentences about France until something stops it.
+
+**TODO(run):** the designed version of this experiment — several prefixes of real prose rather than one lead-in, under the fixed sampling parameters above, reported untruncated.
 - **Experiment B — code completion.** A Python signature and docstring. This is chosen as a task the base model should do *well*, because code completion is continuation. **TODO(run)** — and check whether it continues past the requested function into a second, unrequested one. That would be correct document behavior and unhelpful assistant behavior at the same time.
 - **Experiment C — few-shot prompting.** Three worked examples of a mapping, then a fourth input, as in GPT-2 §2. **TODO(run).** This is the experiment that makes the capability claim concrete: no gradients, no fine-tuning, pattern continued.
 - **Experiment D — perplexity on held-out text.** A number rather than a vibe, and a baseline for the evaluation section. **TODO(run).**
@@ -686,30 +716,43 @@ The modern mechanism is special tokens plus a fixed layout, stored as a Jinja te
 ```
 {% endraw %}
 
-Applying it to a single-turn training example produces exactly this string:
+Applying it to a single-turn training example produces exactly this string, confirmed with `repr()` rather than read off the Jinja:
 
-```
-<|endoftext|><|user|>
-What is the capital of France?
-<|assistant|>
-Paris.<|endoftext|>
+```python
+>>> sft.apply_chat_template(messages, tokenize=False)
+'<|endoftext|><|user|>\nWhat is the capital of France?\n<|assistant|>\nParis.<|endoftext|>'
 ```
 
 and at inference time, with `add_generation_prompt=True` and no assistant message supplied:
 
-```
-<|endoftext|><|user|>
-What is the capital of France?
-<|assistant|>
+```python
+>>> sft.apply_chat_template(messages[:1], tokenize=False, add_generation_prompt=True)
+'<|endoftext|><|user|>\nWhat is the capital of France?\n<|assistant|>\n'
 ```
 
-**TODO(verify):** confirm both strings with `repr(tok.apply_chat_template(...))` rather than by reading the Jinja. Whitespace and `<|endoftext|>` placement are exactly the kind of detail that is wrong in every blog post, including possibly this one.
+Now the part that is worth checking rather than assuming, because it is counterintuitive and it changes how the masking code has to be written. `<|user|>` and `<|assistant|>` *look* like special tokens. They are not. Tokenizing them gives:
+
+```python
+>>> [sft.decode([i]) for i in sft("<|assistant|>", add_special_tokens=False)["input_ids"]]
+['<', '|', 'assistant', '|', '>']
+```
+
+Five ordinary tokens. The tokenizer's `all_special_tokens` contains exactly two entries, `<|endoftext|>` and `<|pad|>`, and `<|assistant|>` is not among them — asking for its id returns 100257, the unknown-token fallback, which is `<|endoftext|>`'s id and a trap for anyone who tests for role markers that way. The vocabulary even *contains* unused `<|im_start|>` and `<|im_end|>` entries at 100264–100265, which this template declines to use.
+
+So the full rendered conversation tokenizes to:
+
+```python
+>>> sft.apply_chat_template([{"role": "user", "content": "Hi"},
+...                          {"role": "assistant", "content": "Hello."}], tokenize=True)
+[100257, 27, 91, 882, 91, 397, 13347, 198, 27, 91, 78191, 91, 397, 9906, 13, 100257]
+#  eos    <   |  user  |  >\n   Hi   \n   <   |  asst  |  >\n Hello  .    eos
+```
 
 Three things about this deserve emphasis.
 
-**`<|assistant|>` is the hinge of the entire section.** After SFT, that token is reliably followed by a helpful response — because in every single training example, it was. The model has not acquired helpfulness as a disposition; it has acquired a very strong conditional distribution over what follows one particular token.
+**The role markers are a learned text convention, not a vocabulary primitive.** After SFT, the five-token sequence `< | assistant | >\n` is reliably followed by a helpful response — because in every single training example, it was. That is the hinge of the entire section, and it works through ordinary next-token prediction over an ordinary byte string. The model has not acquired helpfulness as a disposition; it has acquired a very strong conditional distribution over what follows one particular short string. Models differ here — many do add role markers as single special tokens — so this is a per-model fact to check, not to assume.
 
-**`<|endoftext|>` at the end of each response is how the model learns to stop.** Experiment G's failure mode is not fixed by an architectural change or a decoding heuristic. It is fixed by training on 866,138 examples in which the response ends with an explicit end token, until predicting that token at the end of a response becomes the likeliest continuation. This is the clearest case in the whole post of a behavior that looks like a capability and is really a data format.
+**`<|endoftext|>` *is* a real token, and it is how the model learns to stop.** Experiment G's failure mode is not fixed by an architectural change or a decoding heuristic. It is fixed by training on 866,138 examples in which the response ends with id 100257, until predicting it at the end of a response becomes the likeliest continuation. This is the clearest case in the whole post of a behavior that looks like a capability and is really a data format.
 
 **Template mismatch between training and inference silently destroys quality.** Train with one layout and serve with another and you get a model that looks broken for no visible reason — no error, no warning, just degraded output. The only defense is to render both sides with the same `apply_chat_template` call, which is why the code below never builds these strings by hand.
 
@@ -955,6 +998,8 @@ Carried over from the outline and corrected in the prose:
 6. **The model card's benchmark table.** The table on the *base* model card is headed "Instruct Model" and lists instruct-tuned models; its `OLMo 2 1B` row is the Instruct checkpoint, not the base model. It cannot be used for a base-vs-post-trained comparison. The usable table is on the Instruct card, which has SFT/DPO/Instruct rows and no base row.
 7. **Norm placement.** OLMo 2 is not post-norm. It normalizes the sublayer output *inside* the residual branch, leaving the residual stream clean. The paper's own eq. (2) in §2.1 has a typo ($x$ for $h$); §3.3.2 is correct.
 8. **Chat template.** The base checkpoint's `chat_template` is `None`. Only the post-trained checkpoints have one — which is now a load-bearing fact in two sections rather than a footnote.
+9. **Role markers are not special tokens** (found by running `verify_tokenizer.py`, and originally stated wrongly in the first draft of the prose). `<|assistant|>` tokenizes to five ordinary tokens, `['<', '|', 'assistant', '|', '>']`. Only `<|endoftext|>` and `<|pad|>` are in `all_special_tokens`. The trap: `convert_tokens_to_ids("<|assistant|>")` returns 100257 — the unknown-token fallback, which collides with `<|endoftext|>`'s real id — so testing for role markers that way silently appears to succeed. The section's argument is unchanged but its mechanics were wrong.
+10. **Tokenizer vocab vs. embedding rows.** The tokenizer has 100,278 entries; the embedding matrices have 100,352 rows ($784 \times 128$, padded for tensor-core alignment). 74 rows are unreachable. The parameter arithmetic needs 100,352 to match the published total.
 
 ## Decisions made
 
@@ -964,8 +1009,8 @@ Carried over from the outline and corrected in the prose:
 
 ## Still open
 
-- **Companion code** (open question 3). Leaning `tools/olmo-sft/` in this repo, following the `tools/figures/` precedent, with a README. Not started.
-- **Hardware.** No usable GPU on this machine right now — `torch` is not installed and `nvidia-smi` reports a driver/library version mismatch. Every unrun experiment is blocked on fixing that or renting a box.
+- ~~**Companion code** (open question 3).~~ Resolved: `tools/olmo-sft/` in this repo, following the `tools/figures/` precedent, with a README. Started — `check_env.py` and `verify_tokenizer.py` are in. A notebook can be derived from the scripts later if it seems worth it; the scripts are the source of truth.
+- ~~**Hardware.**~~ Resolved. NVIDIA RTX A4000, 15.6 GiB usable — conveniently the budget the post claims everything fits in. Environment at `~/.venvs/olmo-sft`, pins in `tools/olmo-sft/requirements.txt`, smoke test `tools/olmo-sft/check_env.py`. The `nvidia-smi` "Driver/library version mismatch" turned out **not** to block CUDA: a stale kernel module (615.71.09 resident against 615.78.08 on disk) breaks NVML, whose version check is stricter than the CUDA driver API's, while `torch.cuda` works normally across a same-branch mismatch. Verified by loading the model and generating, not by `is_available()`. A reboot would restore `nvidia-smi` for VRAM monitoring but is not a prerequisite. Diagnosis recorded in `tools/olmo-sft/README.md`.
 - **LoRA target modules.** Attention-only vs. attention+MLP. Numbers for both are in the post; the choice is not made.
 - **Length.** The written sections already run long. If the finished post needs cutting, the KV cache subsection is the most separable piece and could be its own short post.
 

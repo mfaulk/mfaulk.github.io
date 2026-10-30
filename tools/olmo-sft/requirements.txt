@@ -1,0 +1,10 @@
+accelerate==1.15.0
+datasets==5.1.0
+numpy==2.5.4
+peft==0.21.2
+safetensors==0.8.0
+sentencepiece==0.2.2
+tokenizers==0.23.3
+torch==2.15.0
+transformers==5.22.1
+trl==1.17.1
