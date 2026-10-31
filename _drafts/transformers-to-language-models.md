@@ -5,27 +5,17 @@
 > `TODO` inline: the KV cache implementation, a capability benchmark, and four figures.
 > See the working notes at the end. Delete this block and that one before publishing.
 
-The [earlier post on Transformers](https://mfaulk.github.io/2026/01/13/transformers.html) built an encoder-decoder transformer from scratch and trained it to reverse sequences of symbols. That model works, and it is recognizably the architecture from *Attention Is All You Need*. It is not a thing you can ask a question. This post is about the distance between those two objects:
+The [earlier post](https://mfaulk.github.io/2026/01/13/transformers.html) showed how to build and train a Transformer based on the architecture from the paper Attention is All You Need. The encoder-decoder architecture was designed for sequence-to-sequence tasks like translation, where there is a clear separation between the model's input (e.g., text in one language), and the model's output (e.g. text in another language). That kind of translation is useful, but it's pretty far from the kind of flexible interaction and tool usage that we now associate with LLMs and agents. This post is about answering the question,
 
 > How do we get from the Transformer described in *Attention Is All You Need* to a model that answers questions, writes code, and follows instructions?
 
-The answer has three parts, and only the first is architecture.
-
-1. **Architecture.** Delete the encoder, delete cross-attention, and make the task next-token prediction over a single stream of text. It's a surprisingly small change, and we'll make it by removing code from the previous post.
-2. **Scale and data.** Train that model on trillions of tokens. This is where nearly all the capability comes from, and it's the part we won't do here. We'll download someone else's.
-3. **Post-training.** Take the pretrained model and change how it responds to a request. This is the part we'll do, hands-on.
-
-Like the previous post, this one stays close to its sources. Three papers carry the argument:
+As references, I'll be focusing on the papers that introduced GPT-1 and GPT-2, and using the OLMo 2 open language models in the implementation and experiments.
 
 - [**Improving Language Understanding by Generative Pre-Training**](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) (Radford, Narasimhan, Salimans, and Sutskever, 2018), now universally called GPT-1, makes the architectural turn. It throws away the encoder, keeps masked self-attention, trains on next-token prediction, and then fine-tunes the result on individual tasks. It is the origin of the pretrain-then-adapt paradigm that the rest of the post is about.
 - [**Language Models are Unsupervised Multitask Learners**](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) (Radford, Wu, Child, Luan, Amodei, and Sutskever, 2019), GPT-2, argues that the fine-tuning step is optional. A large enough next-token predictor will perform tasks it was never trained on, if you phrase the task as text. This is the paper that explains what a *base model* is and what it can do before anyone instruction-tunes it.
 - [**2 OLMo 2 Furious**](https://arxiv.org/abs/2501.00656) (OLMo Team, 2025) describes a model family built the way models are built now: RoPE, RMSNorm, QK-norm, a reordered residual stream, and a published post-training pipeline. OLMo 2 is fully open (data, code, weights, and intermediate checkpoints), which makes it the model we can actually take apart.
 
-**Scope.** The hands-on training experiment in this post is supervised instruction tuning (SFT) only. Pretraining, preference optimization, and reinforcement learning are sketched at the end and left to later posts.
-
-**A framing to be careful about.** It is common to read that base models "can't answer questions" or "just autocomplete." That is misleading, and GPT-2 is the paper that says why. A pretrained base model is a capable next-token predictor that already holds the knowledge and much of the task ability we care about, and with the right prompt a good deal of it can be reached. What instruction tuning changes is the *reliability of form*: whether the model treats its input as a request to be fulfilled rather than a document to be continued, whether it stops when it is done, and whether it does these things without prompt engineering. That is a real and valuable change, and it is a smaller change than it is usually described as.
-
-It's also, as the measurements later show, not a change that makes a small model good at things it was bad at. Those two claims need keeping apart.
+By the end, you should understand how generative language models differ architecturally from the original Transformer architecture, and how a base model can be post-trained into a useful question-answering or coding agent.
 
 ---
 
@@ -38,6 +28,11 @@ model = Transformer(src_vocab_size=12, tgt_vocab_size=12, d_model=128,
                     num_heads=4, d_ff=512, num_layers=2)
 # parameters: 930828
 ```
+
+<figure style="text-align: center;">
+  <img src="/assets/images/encoder-decoder-architecture.svg" alt="An encoder-decoder transformer. On the left, an input embedding and positional encoding feed a stack of N encoder blocks, each containing a multi-head self-attention sublayer and a feed-forward sublayer, every sublayer preceded by a LayerNorm and bypassed by a residual connection. On the right, an output embedding feeds a stack of N decoder blocks, each adding a masked multi-head self-attention sublayer and a multi-head cross-attention sublayer. An arrow carries the encoder stack's output across to the cross-attention sublayer as its keys and values. The decoder stack ends with a LayerNorm, a linear projection, and a softmax over the vocabulary." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>The encoder-decoder transformer from the previous post, with N = 2. It is drawn pre-norm, matching the code rather than the original paper: every sublayer is a LayerNorm, then the sublayer itself, then a residual add, so the dashed line is the residual carrying the input around untouched. <em>Attention Is All You Need</em> draws the post-norm arrangement instead, with "Add &amp; Norm" after each sublayer. The orange path is the only thing joining the two stacks, and it is the first thing the next section removes.</figcaption>
+</figure>
 
 Six thousand steps of training brought the loss to 0.0059 and exact-match accuracy to 256/256 on held-out sequences. The toy task was chosen because it cannot be solved by attending to the matching position: to produce target position $t$, the decoder has to locate source position $L - 1 - t$, which depends on the length of the particular input. Getting it right is evidence that cross-attention is genuinely aligning rather than copying.
 
@@ -1459,11 +1454,12 @@ Worth keeping separate from the corrections, because these are things the experi
 Ranked by how much they earn their generator script. Conventions in `tools/figures/README.md`; add a row there per figure.
 
 1. **`chat-template-loss-mask.svg`** — one rendered training example as a token strip: role tokens in one color, prompt tokens greyed with `label = -100`, response tokens colored with `label = token`, and a bracket under the response reading "loss computed here." Carries the template and masking subsections at once. The figure I most want.
-2. **`encoder-decoder-vs-decoder-only.svg`** — side by side. Left: the previous post's two stacks and the long cross-attention arrow. Right: one stack, cross-attention drawn as a dashed ghost, encoder greyed out. Same block vocabulary and palette as the previous post so the correspondence is immediate.
-3. **`rope-rotation.svg`** — a query vector's 2-D coordinate pair rotated by $m\theta_i$ at three positions, with the relative-angle identity $(R_m q)^\top(R_n k) = q^\top R_{n-m} k$ shown as the angle between two rotated vectors. Nothing in the written RoPE subsection is visual yet, and this is the one idea in it that wants a picture.
-4. **`lora-adapter.svg`** — input → frozen grey $W_0$ and, in parallel, a thin $A$ down to $r$ then $B$ back up to $d$ in the accent color, summed at the output. Dimensions on every edge; the visual point is the narrow waist at $r$.
-5. **`post-training-pipeline.svg`** — `raw text → [pretraining] → base → [SFT] → instruct → [DPO] → aligned → [RLVR] → reasoning`, with SFT boxed as "this post" and pretraining greyed. Would open the post and recur at the end. Lowest priority: the prose already carries it, and the OLMo checkpoint table does the same work.
-6. **`shifted-labels.svg`** — token strip drawn twice, offset by one, arrows from each input position to its label, causal mask triangle beneath. Cheap to generate but may be redundant with the loss code block.
+2. ~~**`encoder-decoder-architecture.svg`**~~ **Done**, and in "Where We Left Off". Drawn pre-norm to match the previous post's code rather than copying the paper's post-norm Figure 1, with the cross-attention path in orange so the next section can talk about deleting it. `tools/figures/encoder-decoder-architecture.py`.
+3. **`decoder-only-architecture.svg`** — the companion, for §2: the same figure with the encoder column and the cross-attention sublayer removed, laid out on the same grid and in the same palette so flipping between the two shows only the deletion. The generator is written to make this cheap; most of it is reusable.
+4. **`rope-rotation.svg`** — a query vector's 2-D coordinate pair rotated by $m\theta_i$ at three positions, with the relative-angle identity $(R_m q)^\top(R_n k) = q^\top R_{n-m} k$ shown as the angle between two rotated vectors. Nothing in the written RoPE subsection is visual yet, and this is the one idea in it that wants a picture.
+5. **`lora-adapter.svg`** — input → frozen grey $W_0$ and, in parallel, a thin $A$ down to $r$ then $B$ back up to $d$ in the accent color, summed at the output. Dimensions on every edge; the visual point is the narrow waist at $r$.
+6. **`post-training-pipeline.svg`** — `raw text → [pretraining] → base → [SFT] → instruct → [DPO] → aligned → [RLVR] → reasoning`, with SFT boxed as "this post" and pretraining greyed. Would open the post and recur at the end. Lowest priority: the prose already carries it, and the OLMo checkpoint table does the same work.
+7. **`shifted-labels.svg`** — token strip drawn twice, offset by one, arrows from each input position to its label, causal mask triangle beneath. Cheap to generate but may be redundant with the loss code block.
 
 
 

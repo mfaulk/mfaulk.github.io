@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -808 744 824" width="744" height="824" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="A pre-norm encoder-decoder transformer. The encoder stack on the left reads the source sequence through a multi-head self-attention sublayer and a feed-forward sublayer. Its output supplies the keys and values to a cross-attention sublayer in the decoder stack on the right, which also has a masked self-attention sublayer and a feed-forward sublayer, followed by a linear projection and a softmax over the vocabulary.">
+<title>Encoder-decoder transformer, pre-norm</title>
+<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#55606b"/></marker><marker id="arrowx" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#B4531A"/></marker></defs>
+<text x="218.0" y="-8" text-anchor="middle" font-size="14.5" fill="currentColor">Inputs</text>
+<rect x="120.0" y="-76" width="196" height="46" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.5"/>
+<text x="218.0" y="-56.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Input</text>
+<text x="218.0" y="-39.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Embedding</text>
+<line x1="218.0" y1="-76" x2="218.0" y2="-96" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="218.0" cy="-107" r="11" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 212.5 -107 h 11 M 218.0 -112.5 v 11" stroke="#55606b" stroke-width="1.5"/>
+<text x="82.0" y="-111" text-anchor="end" font-size="12.5" fill="currentColor" opacity="0.85">Positional</text>
+<text x="82.0" y="-94" text-anchor="end" font-size="12.5" fill="currentColor" opacity="0.85">Encoding</text>
+<line x1="74.0" y1="-107" x2="205.0" y2="-107" stroke="#55606b" stroke-width="1.4" opacity="0.75" marker-end="url(#arrow)"/>
+<line x1="218.0" y1="-136" x2="218.0" y2="-150" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="120.0" y="-180" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="218.0" y="-160.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">LayerNorm</text>
+<line x1="218.0" y1="-180" x2="218.0" y2="-194" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="120.0" y="-240" width="196" height="46" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="218.0" y="-220.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Multi-Head</text>
+<text x="218.0" y="-203.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Self-Attention</text>
+<line x1="218.0" y1="-240" x2="218.0" y2="-254" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="218.0" cy="-265" r="11" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 212.5 -265 h 11 M 218.0 -270.5 v 11" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 218.0 -136 H 96.0 V -265 H 207.0" fill="none" stroke="#55606b" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
+<line x1="218.0" y1="-294" x2="218.0" y2="-308" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="120.0" y="-338" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="218.0" y="-318.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">LayerNorm</text>
+<line x1="218.0" y1="-338" x2="218.0" y2="-352" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="120.0" y="-398" width="196" height="46" rx="6" fill="#EAF3EE" stroke="#2F7A4F" stroke-width="1.5"/>
+<text x="218.0" y="-378.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Feed</text>
+<text x="218.0" y="-361.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Forward</text>
+<line x1="218.0" y1="-398" x2="218.0" y2="-412" stroke="#2F7A4F" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="218.0" cy="-423" r="11" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 212.5 -423 h 11 M 218.0 -428.5 v 11" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 218.0 -294 H 96.0 V -423 H 207.0" fill="none" stroke="#55606b" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
+<rect x="86.0" y="-446" width="264" height="322" rx="10" fill="none" stroke="#55606b" stroke-width="1.2" opacity="0.4"/>
+<text x="72.0" y="-280.0" text-anchor="middle" font-size="12.5" fill="currentColor" opacity="0.9" font-weight="600">N×</text>
+<line x1="218.0" y1="-446" x2="218.0" y2="-464" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="120.0" y="-494" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="218.0" y="-474.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">LayerNorm</text>
+<text x="526.0" y="-8" text-anchor="middle" font-size="14.5" fill="currentColor">Outputs (shifted right)</text>
+<rect x="428.0" y="-76" width="196" height="46" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.5"/>
+<text x="526.0" y="-56.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Output</text>
+<text x="526.0" y="-39.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Embedding</text>
+<line x1="526.0" y1="-76" x2="526.0" y2="-96" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="526.0" cy="-107" r="11" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 520.5 -107 h 11 M 526.0 -112.5 v 11" stroke="#55606b" stroke-width="1.5"/>
+<text x="662.0" y="-111" text-anchor="start" font-size="12.5" fill="currentColor" opacity="0.85">Positional</text>
+<text x="662.0" y="-94" text-anchor="start" font-size="12.5" fill="currentColor" opacity="0.85">Encoding</text>
+<line x1="670.0" y1="-107" x2="539.0" y2="-107" stroke="#55606b" stroke-width="1.4" opacity="0.75" marker-end="url(#arrow)"/>
+<line x1="526.0" y1="-136" x2="526.0" y2="-150" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-180" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="526.0" y="-160.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">LayerNorm</text>
+<line x1="526.0" y1="-180" x2="526.0" y2="-194" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-240" width="196" height="46" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="526.0" y="-220.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Masked Multi-Head</text>
+<text x="526.0" y="-203.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Self-Attention</text>
+<line x1="526.0" y1="-240" x2="526.0" y2="-254" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="526.0" cy="-265" r="11" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 520.5 -265 h 11 M 526.0 -270.5 v 11" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 526.0 -136 H 648.0 V -265 H 537.0" fill="none" stroke="#55606b" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
+<line x1="526.0" y1="-294" x2="526.0" y2="-308" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-338" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="526.0" y="-318.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">LayerNorm</text>
+<line x1="526.0" y1="-338" x2="526.0" y2="-352" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-398" width="196" height="46" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="526.0" y="-378.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Multi-Head</text>
+<text x="526.0" y="-361.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Cross-Attention</text>
+<line x1="526.0" y1="-398" x2="526.0" y2="-412" stroke="#B4531A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="526.0" cy="-423" r="11" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 520.5 -423 h 11 M 526.0 -428.5 v 11" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 526.0 -294 H 648.0 V -423 H 537.0" fill="none" stroke="#55606b" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
+<line x1="526.0" y1="-452" x2="526.0" y2="-466" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-496" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="526.0" y="-476.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">LayerNorm</text>
+<line x1="526.0" y1="-496" x2="526.0" y2="-510" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-556" width="196" height="46" rx="6" fill="#EAF3EE" stroke="#2F7A4F" stroke-width="1.5"/>
+<text x="526.0" y="-536.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Feed</text>
+<text x="526.0" y="-519.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Forward</text>
+<line x1="526.0" y1="-556" x2="526.0" y2="-570" stroke="#2F7A4F" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="526.0" cy="-581" r="11" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 520.5 -581 h 11 M 526.0 -586.5 v 11" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 526.0 -452 H 648.0 V -581 H 537.0" fill="none" stroke="#55606b" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.75" marker-end="url(#arrow)"/>
+<rect x="394.0" y="-604" width="264" height="480" rx="10" fill="none" stroke="#55606b" stroke-width="1.2" opacity="0.4"/>
+<text x="672.0" y="-359.0" text-anchor="middle" font-size="12.5" fill="currentColor" opacity="0.9" font-weight="600">N×</text>
+<line x1="526.0" y1="-604" x2="526.0" y2="-622" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-652" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="526.0" y="-632.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">LayerNorm</text>
+<line x1="526.0" y1="-652" x2="526.0" y2="-672" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-702" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="526.0" y="-682.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Linear</text>
+<line x1="526.0" y1="-702" x2="526.0" y2="-722" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="428.0" y="-752" width="196" height="30" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="526.0" y="-732.0" text-anchor="middle" font-size="14.5" fill="#1a2a3a">Softmax</text>
+<line x1="526.0" y1="-752" x2="526.0" y2="-772" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="526.0" y="-780" text-anchor="middle" font-size="14.5" fill="currentColor">Output probabilities</text>
+<path d="M 218.0 -494 V -516 H 372.0 V -375.0 H 425.0" fill="none" stroke="#B4531A" stroke-width="1.6" marker-end="url(#arrowx)"/>
+<text x="420.0" y="-399.0" text-anchor="end" font-size="12.5" fill="#B4531A">keys,</text>
+<text x="420.0" y="-382.0" text-anchor="end" font-size="12.5" fill="#B4531A">values</text>
+</svg>

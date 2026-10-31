@@ -10,6 +10,7 @@ script writes exactly one figure, and is named after the file it produces.
 | `dot-product-attention.py` | `dot-product-attention.svg` | Transformers — attention |
 | `self-attention-weights.py` | `self-attention-weights.svg` | Transformers — self-attention |
 | `qkv-projections.py` | `qkv-projections.svg` | Transformers — keys, values, queries |
+| `encoder-decoder-architecture.py` | `encoder-decoder-architecture.svg` | Transformers to Language Models — where we left off |
 
 ## Running them
 
