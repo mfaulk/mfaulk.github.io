@@ -42,3 +42,24 @@ defaults:
       type: posts
     values:
       tags: Other
+
+# The github-pages gem bundles jekyll-readme-index, which turns any README.md
+# into its directory's index page, and jekyll-optional-front-matter, which makes
+# every other .md a page. Without this, the repo's own docs (tools/*/README.md,
+# experiment outputs under out/) are published as blog pages and listed in the
+# site navigation. Keep Jekyll's defaults — setting exclude replaces them.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - README.md
+  - tools/
+  - out/
+
+# Pin the nav explicitly so a stray markdown file can never add a link to it.
+header_pages:
+  - archive.md
