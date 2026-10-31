@@ -16,8 +16,8 @@ script writes exactly one figure, and is named after the file it produces.
 | `encoder-decoder-architectures.py` | `encoder-decoder-architectures.svg` | Transformers — encoder-decoder vs decoder-only vs encoder-only |
 
 `_panels.py` is the exception to one-script-one-figure: it generates nothing by
-itself. The three figures above are the same panels at three zoom levels, so
-the panel builders live there and the figures compose them. Files beginning
+itself. The last four figures draw the same blocks at different zoom levels, so
+the panel builders live there and each figure composes them. Files beginning
 with an underscore are skipped by the regenerate-all loop below.
 
 ## Running them
