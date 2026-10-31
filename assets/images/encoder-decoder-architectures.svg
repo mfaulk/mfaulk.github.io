@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-124.7 -374.0 935.4 448.0" width="935.4" height="448.0" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="Three transformer architectures side by side. The Transformer has an encoder stack of self-attention and feed-forward sublayers and a decoder stack of masked self-attention, cross-attention and feed-forward sublayers. GPT is decoder-only: a single stack of masked self-attention and feed-forward sublayers producing next-token probabilities. BERT is encoder-only: a single stack of unmasked self-attention and feed-forward sublayers producing masked-token probabilities.">
+<title>Encoder-decoder, decoder-only, and encoder-only architectures</title>
+<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#55606b"/></marker></defs>
+<text x="0.0" y="0.0" text-anchor="middle" font-size="12" fill="currentColor">inputs</text>
+<rect x="-76.0" y="-47.0" width="152.0" height="27.0" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.5"/>
+<text x="0.0" y="-28.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Embedding</text>
+<line x1="0.0" y1="-14.0" x2="0.0" y2="-20.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="0.0" y1="-47.0" x2="0.0" y2="-63.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="0.0" cy="-71.0" r="10" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M -5.0 -71.0 h 10 M 0.0 -76.0 v 10" stroke="#55606b" stroke-width="1.5"/>
+<line x1="0.0" y1="-81.0" x2="0.0" y2="-97.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-76.0" y="-124.0" width="152.0" height="27.0" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="0.0" y="-105.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Self-Attention</text>
+<line x1="0.0" y1="-124.0" x2="0.0" y2="-133.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-76.0" y="-160.0" width="152.0" height="27.0" rx="6" fill="#EAF3EE" stroke="#2F7A4F" stroke-width="1.5"/>
+<text x="0.0" y="-141.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Feed Forward</text>
+<rect x="-86.0" y="-172.0" width="172.0" height="81.0" rx="9" fill="none" stroke="#55606b" stroke-width="1.2" opacity="0.45"/>
+<text x="-102.0" y="-127.5" text-anchor="middle" font-size="12" fill="currentColor" font-weight="600">N×</text>
+<text x="206.0" y="0.0" text-anchor="middle" font-size="12" fill="currentColor">outputs (shifted right)</text>
+<rect x="130.0" y="-47.0" width="152.0" height="27.0" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.5"/>
+<text x="206.0" y="-28.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Embedding</text>
+<line x1="206.0" y1="-14.0" x2="206.0" y2="-20.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="206.0" y1="-47.0" x2="206.0" y2="-63.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="206.0" cy="-71.0" r="10" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 201.0 -71.0 h 10 M 206.0 -76.0 v 10" stroke="#55606b" stroke-width="1.5"/>
+<line x1="206.0" y1="-81.0" x2="206.0" y2="-97.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="130.0" y="-124.0" width="152.0" height="27.0" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="206.0" y="-105.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Masked Self-Attention</text>
+<line x1="206.0" y1="-124.0" x2="206.0" y2="-133.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="130.0" y="-160.0" width="152.0" height="27.0" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="206.0" y="-141.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Cross-Attention</text>
+<line x1="206.0" y1="-160.0" x2="206.0" y2="-169.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="130.0" y="-196.0" width="152.0" height="27.0" rx="6" fill="#EAF3EE" stroke="#2F7A4F" stroke-width="1.5"/>
+<text x="206.0" y="-177.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Feed Forward</text>
+<rect x="120.0" y="-208.0" width="172.0" height="117.0" rx="9" fill="none" stroke="#55606b" stroke-width="1.2" opacity="0.45"/>
+<text x="308.0" y="-145.5" text-anchor="middle" font-size="12" fill="currentColor" font-weight="600">N×</text>
+<line x1="206.0" y1="-208.0" x2="206.0" y2="-226.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="130.0" y="-253.0" width="152.0" height="27.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="206.0" y="-234.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Linear</text>
+<line x1="206.0" y1="-253.0" x2="206.0" y2="-262.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="130.0" y="-289.0" width="152.0" height="27.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="206.0" y="-270.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Softmax</text>
+<line x1="206.0" y1="-289.0" x2="206.0" y2="-307.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="206.0" y="-315.0" text-anchor="middle" font-size="12" fill="currentColor">output probabilities</text>
+<path d="M 0.0 -172.0 V -194.0 H 103.0 V -146.5 H 128.0" fill="none" stroke="#B4531A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="103.0" y="-202.0" text-anchor="middle" font-size="12" fill="#B4531A">keys, values</text>
+<text x="446.0" y="0.0" text-anchor="middle" font-size="12" fill="currentColor">inputs</text>
+<rect x="370.0" y="-47.0" width="152.0" height="27.0" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.5"/>
+<text x="446.0" y="-28.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Embedding</text>
+<line x1="446.0" y1="-14.0" x2="446.0" y2="-20.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="446.0" y1="-47.0" x2="446.0" y2="-63.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="446.0" cy="-71.0" r="10" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 441.0 -71.0 h 10 M 446.0 -76.0 v 10" stroke="#55606b" stroke-width="1.5"/>
+<line x1="446.0" y1="-81.0" x2="446.0" y2="-97.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="370.0" y="-124.0" width="152.0" height="27.0" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="446.0" y="-105.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Masked Self-Attention</text>
+<line x1="446.0" y1="-124.0" x2="446.0" y2="-133.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="370.0" y="-160.0" width="152.0" height="27.0" rx="6" fill="#EAF3EE" stroke="#2F7A4F" stroke-width="1.5"/>
+<text x="446.0" y="-141.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Feed Forward</text>
+<rect x="360.0" y="-172.0" width="172.0" height="81.0" rx="9" fill="none" stroke="#55606b" stroke-width="1.2" opacity="0.45"/>
+<text x="548.0" y="-127.5" text-anchor="middle" font-size="12" fill="currentColor" font-weight="600">N×</text>
+<line x1="446.0" y1="-172.0" x2="446.0" y2="-190.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="370.0" y="-217.0" width="152.0" height="27.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="446.0" y="-198.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Linear</text>
+<line x1="446.0" y1="-217.0" x2="446.0" y2="-226.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="370.0" y="-253.0" width="152.0" height="27.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="446.0" y="-234.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Softmax</text>
+<line x1="446.0" y1="-253.0" x2="446.0" y2="-271.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="446.0" y="-279.0" text-anchor="middle" font-size="12" fill="currentColor">next-token probabilities</text>
+<text x="686.0" y="0.0" text-anchor="middle" font-size="12" fill="currentColor">inputs</text>
+<rect x="610.0" y="-47.0" width="152.0" height="27.0" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.5"/>
+<text x="686.0" y="-28.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Embedding</text>
+<line x1="686.0" y1="-14.0" x2="686.0" y2="-20.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="686.0" y1="-47.0" x2="686.0" y2="-63.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="686.0" cy="-71.0" r="10" fill="#ffffff" stroke="#55606b" stroke-width="1.5"/>
+<path d="M 681.0 -71.0 h 10 M 686.0 -76.0 v 10" stroke="#55606b" stroke-width="1.5"/>
+<line x1="686.0" y1="-81.0" x2="686.0" y2="-97.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="610.0" y="-124.0" width="152.0" height="27.0" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="686.0" y="-105.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Self-Attention</text>
+<line x1="686.0" y1="-124.0" x2="686.0" y2="-133.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="610.0" y="-160.0" width="152.0" height="27.0" rx="6" fill="#EAF3EE" stroke="#2F7A4F" stroke-width="1.5"/>
+<text x="686.0" y="-141.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Feed Forward</text>
+<rect x="600.0" y="-172.0" width="172.0" height="81.0" rx="9" fill="none" stroke="#55606b" stroke-width="1.2" opacity="0.45"/>
+<text x="788.0" y="-127.5" text-anchor="middle" font-size="12" fill="currentColor" font-weight="600">N×</text>
+<line x1="686.0" y1="-172.0" x2="686.0" y2="-190.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="610.0" y="-217.0" width="152.0" height="27.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="686.0" y="-198.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Linear</text>
+<line x1="686.0" y1="-217.0" x2="686.0" y2="-226.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="610.0" y="-253.0" width="152.0" height="27.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="686.0" y="-234.5" text-anchor="middle" font-size="12" fill="#1a2a3a">Softmax</text>
+<line x1="686.0" y1="-253.0" x2="686.0" y2="-271.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="686.0" y="-279.0" text-anchor="middle" font-size="12" fill="currentColor">masked-token probabilities</text>
+<path d="M -76.0 20.0 q 0 8 8 8 H -8.0 q 8 0 8 8 q 0 -8 8 -8 H 68.0 q 8 0 8 -8" fill="none" stroke="#55606b" stroke-width="1.6"/>
+<path d="M 130.0 20.0 q 0 8 8 8 H 198.0 q 8 0 8 8 q 0 -8 8 -8 H 274.0 q 8 0 8 -8" fill="none" stroke="#55606b" stroke-width="1.6"/>
+<path d="M 370.0 20.0 q 0 8 8 8 H 438.0 q 8 0 8 8 q 0 -8 8 -8 H 514.0 q 8 0 8 -8" fill="none" stroke="#55606b" stroke-width="1.6"/>
+<path d="M 610.0 20.0 q 0 8 8 8 H 678.0 q 8 0 8 8 q 0 -8 8 -8 H 754.0 q 8 0 8 -8" fill="none" stroke="#55606b" stroke-width="1.6"/>
+<text x="0.0" y="54.0" text-anchor="middle" font-size="14" fill="currentColor" font-weight="600">Encoder</text>
+<text x="206.0" y="54.0" text-anchor="middle" font-size="14" fill="currentColor" font-weight="600">Decoder</text>
+<text x="446.0" y="54.0" text-anchor="middle" font-size="14" fill="currentColor" font-weight="600">Decoder-only</text>
+<text x="686.0" y="54.0" text-anchor="middle" font-size="14" fill="currentColor" font-weight="600">Encoder-only</text>
+<text x="103.0" y="-341.0" text-anchor="middle" font-size="17" fill="currentColor" font-weight="700">Transformer</text>
+<text x="446.0" y="-341.0" text-anchor="middle" font-size="17" fill="currentColor" font-weight="700">GPT</text>
+<text x="686.0" y="-341.0" text-anchor="middle" font-size="17" fill="currentColor" font-weight="700">BERT</text>
+</svg>

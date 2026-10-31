@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-111.0 -252.0 638.0 278.0" width="638.0" height="278.0" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="Multi-head attention. Keys, values and queries are each projected by a separate linear layer, the projections feed h parallel scaled dot-product attention heads, and the heads' outputs are concatenated and projected once more. Dashed lines magnify one of those heads into the scaled dot-product attention detail on the left.">
+<title>Multi-head attention</title>
+<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#55606b"/></marker></defs>
+<text x="-52.0" y="0.0" text-anchor="middle" font-size="14" fill="#1F5CA8" font-weight="600">Q</text>
+<text x="-8.0" y="0.0" text-anchor="middle" font-size="14" fill="#B4531A" font-weight="600">K</text>
+<text x="52.0" y="0.0" text-anchor="middle" font-size="14" fill="#2F7A4F" font-weight="600">V</text>
+<rect x="-82.0" y="-52.0" width="104.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="-30.0" y="-32.0" text-anchor="middle" font-size="14" fill="#1a2a3a">MatMul</text>
+<line x1="-52.0" y1="-16.0" x2="-52.0" y2="-22.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="-8.0" y1="-16.0" x2="-8.0" y2="-22.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-82.0" y="-100.0" width="104.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="-30.0" y="-80.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Scale</text>
+<line x1="-30.0" y1="-52.0" x2="-30.0" y2="-70.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-82.0" y="-148.0" width="104.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="-30.0" y="-128.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Softmax</text>
+<line x1="-30.0" y1="-100.0" x2="-30.0" y2="-118.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-74.0" y="-196.0" width="148.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="0.0" y="-176.0" text-anchor="middle" font-size="14" fill="#1a2a3a">MatMul</text>
+<line x1="-30.0" y1="-148.0" x2="-30.0" y2="-166.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="52.0" y1="-16.0" x2="52.0" y2="-166.0" stroke="#2F7A4F" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="0.0" y1="-196.0" x2="0.0" y2="-220.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-95.0" y="-210.0" width="190.0" height="220.0" rx="12" fill="none" stroke="#55606b" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.5"/>
+<text x="238.0" y="0.0" text-anchor="middle" font-size="14" fill="#B4531A" font-weight="600">K</text>
+<text x="346.0" y="0.0" text-anchor="middle" font-size="14" fill="#2F7A4F" font-weight="600">V</text>
+<text x="454.0" y="0.0" text-anchor="middle" font-size="14" fill="#1F5CA8" font-weight="600">Q</text>
+<rect x="195.0" y="-52.0" width="86.0" height="30.0" rx="6" fill="#FBF0E8" stroke="#B4531A" stroke-width="1.5"/>
+<text x="238.0" y="-32.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Linear</text>
+<line x1="238.0" y1="-16.0" x2="238.0" y2="-22.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="303.0" y="-52.0" width="86.0" height="30.0" rx="6" fill="#EAF3EE" stroke="#2F7A4F" stroke-width="1.5"/>
+<text x="346.0" y="-32.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Linear</text>
+<line x1="346.0" y1="-16.0" x2="346.0" y2="-22.0" stroke="#2F7A4F" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="411.0" y="-52.0" width="86.0" height="30.0" rx="6" fill="#ECF3FA" stroke="#1F5CA8" stroke-width="1.5"/>
+<text x="454.0" y="-32.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Linear</text>
+<line x1="454.0" y1="-16.0" x2="454.0" y2="-22.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="211.0" y="-118.0" width="290.0" height="30" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.2" opacity="0.45"/>
+<rect x="206.0" y="-113.0" width="290.0" height="30" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.2" opacity="0.45"/>
+<rect x="201.0" y="-108.0" width="290.0" height="30.0" rx="6" fill="#F0EDF6" stroke="#5B4B8A" stroke-width="1.5"/>
+<text x="346.0" y="-88.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Scaled Dot-Product Attention</text>
+<line x1="238.0" y1="-52.0" x2="238.0" y2="-78.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="346.0" y1="-52.0" x2="346.0" y2="-78.0" stroke="#2F7A4F" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="454.0" y1="-52.0" x2="454.0" y2="-78.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="271.0" y="-164.0" width="150.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="346.0" y="-144.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Concatenate</text>
+<line x1="346.0" y1="-123.0" x2="346.0" y2="-134.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="303.0" y="-212.0" width="86.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="346.0" y="-192.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Linear</text>
+<line x1="346.0" y1="-164.0" x2="346.0" y2="-182.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="346.0" y1="-212.0" x2="346.0" y2="-236.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="485.0" y="-128.0" text-anchor="end" font-size="12" fill="#55606b" opacity="0.9">h heads</text>
+<rect x="181.0" y="-226.0" width="330.0" height="236.0" rx="12" fill="none" stroke="#55606b" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.5"/>
+<path d="M 95.0 -210.0 L 201.0 -108.0" fill="none" stroke="#55606b" stroke-width="1.2" stroke-dasharray="4 3"/>
+<path d="M 95.0 10.0 L 201.0 -78.0" fill="none" stroke="#55606b" stroke-width="1.2" stroke-dasharray="4 3"/>
+</svg>

@@ -7,3 +7,6 @@ vendor/
 
 # Intellij
 .idea/
+# Python bytecode
+__pycache__/
+*.pyc

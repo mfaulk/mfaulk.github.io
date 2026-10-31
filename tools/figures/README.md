@@ -10,6 +10,15 @@ script writes exactly one figure, and is named after the file it produces.
 | `dot-product-attention.py` | `dot-product-attention.svg` | Transformers — attention |
 | `self-attention-weights.py` | `self-attention-weights.svg` | Transformers — self-attention |
 | `qkv-projections.py` | `qkv-projections.svg` | Transformers — keys, values, queries |
+| `scaled-dot-product-attention.py` | `scaled-dot-product-attention.svg` | Transformers — scaled dot product attention |
+| `multi-head-attention.py` | `multi-head-attention.svg` | Transformers — multi-head attention |
+| `transformer-architecture.py` | `transformer-architecture.svg` | Transformers — opening diagram |
+| `encoder-decoder-architectures.py` | `encoder-decoder-architectures.svg` | Transformers — encoder-decoder vs decoder-only vs encoder-only |
+
+`_panels.py` is the exception to one-script-one-figure: it generates nothing by
+itself. The last four figures draw the same blocks at different zoom levels, so
+the panel builders live there and each figure composes them. Files beginning
+with an underscore are skipped by the regenerate-all loop below.
 
 ## Running them
 
@@ -24,13 +33,14 @@ their scripts.
 
 To regenerate everything:
 
-    for f in tools/figures/*.py; do python3 "$f"; done
+    for f in tools/figures/[!_]*.py; do python3 "$f"; done
 
 ## Conventions these figures follow
 
 - **Colours are consistent across figures**: queries `#1F5CA8` (blue), keys
   `#B4531A` (orange), values `#2F7A4F` (green), shared input `#5B4B8A`
-  (purple), outputs `#55606b` (grey).
+  (purple), outputs `#55606b` (grey). The architecture figures extend this:
+  anything combining q, k and v is purple, and plain operations are grey.
 - **The image carries labels, the caption carries prose.** A figure names its
   parts — `Encoder`, `query`, `keys`, axis labels, dimensions — and everything
   explanatory lives in the `figcaption` in the post, where it stays selectable,
