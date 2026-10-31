@@ -674,8 +674,8 @@ Most of the parameters live here too. Each block spends $2 \cdot d_{\text{model}
 ## Encoder-Decoder
 
 <figure style="text-align: center;">
-  <img src="/assets/images/transformer-encoder-and-decoder-architectures.png" alt="Encoder-Decoder Architectures" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Encoder-Decoder Architectures. <a href="https://towardsdatascience.com/a-complete-guide-to-bert-with-code-9f87602e4a11/">Image credit</a>: Bradney Smith, "A Complete Guide to BERT with Code", adapted from the architecture diagram in <em>Attention Is All You Need</em></figcaption>
+  <img src="/assets/images/encoder-decoder-architectures.svg" alt="Three transformer architectures side by side. The Transformer has an encoder stack of self-attention and feed-forward sublayers and a decoder stack of masked self-attention, cross-attention and feed-forward sublayers, with the encoder output supplying the cross-attention keys and values. GPT is decoder-only: a single stack of masked self-attention and feed-forward sublayers producing next-token probabilities. BERT is encoder-only: a single stack of unmasked self-attention and feed-forward sublayers producing masked-token probabilities." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>The three ways these blocks get arranged. The Transformer pairs an encoder stack with a decoder stack, and cross-attention is what carries the encoder's output into the decoder. GPT keeps only the decoder; BERT keeps only the encoder. The block itself is the same object in all three, and what distinguishes them is the attention mask: causal where a position may only see what precedes it, unrestricted where it may see everything.</figcaption>
 </figure>
 
 
