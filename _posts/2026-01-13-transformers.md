@@ -3,8 +3,8 @@
 This post is a detailed look at the original Transformer. We'll be working through the intuition, architecture, and a PyTorch implementation. By the end, you should be able to train and run your own transformer, and feel comfortable with each component in this diagram:
 
 <figure style="text-align: center;">
-  <img src="/assets/images/transformer-architecture.png" alt="Transformer Architecture" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Transformer Architecture. <a href="https://arxiv.org/abs/2009.06732">Image credit</a>: Tay et al., "Efficient Transformers: A Survey"</figcaption>
+  <img src="/assets/images/transformer-architecture.svg" alt="The transformer architecture at three zoom levels. On the left, scaled dot-product attention: queries and keys meet in a matrix multiply, which is scaled, passed through a softmax, and multiplied by the values. In the middle, multi-head attention: keys, values and queries are each projected by a linear layer and fed to h parallel scaled dot-product attention heads, whose outputs are concatenated and projected again. On the right, the full encoder-decoder stack: an encoder of N blocks, each a multi-head self-attention sublayer and a feed-forward sublayer with Add and Norm after each, and a decoder of N blocks that adds a masked self-attention sublayer and a cross-attention sublayer taking its keys and values from the encoder output, ending in a linear projection and a softmax." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>The transformer architecture at three zoom levels: scaled dot-product attention, the multi-head attention built out of <em>h</em> copies of it, and the encoder-decoder stack built out of those. Throughout, queries are blue, keys orange, and values green. The stack is drawn post-norm, with Add &amp; Norm after each sublayer, which is the arrangement in <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>; the implementation later in this post is pre-norm, for reasons covered in the layer normalization section.</figcaption>
 </figure>
  
 # The Transformer
@@ -85,8 +85,8 @@ At its core, *attention is a method for computing a weighted average over a set 
 ## Scaled Dot Product Attention
 
 <figure style="text-align: center;">
-  <img src="/assets/images/scaled-dot-product-attention-diagram.png" alt="Scaled dot product attention" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Scaled dot product attention. Detail from the architecture diagram above, <a href="https://arxiv.org/abs/2009.06732">image credit</a>: Tay et al., "Efficient Transformers: A Survey"</figcaption>
+  <img src="/assets/images/scaled-dot-product-attention.svg" alt="Scaled dot-product attention. Queries and keys enter a matrix multiply, whose result is scaled by one over the square root of the key dimension, passed through a softmax, and then multiplied by the values. The values bypass the softmax and enter only the second matrix multiply." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Scaled dot-product attention, the left panel of the diagram above. Note that the values take no part in forming the weights: they bypass the softmax entirely and are only ever summed.</figcaption>
 </figure>
 
 
@@ -237,8 +237,8 @@ def scaled_dot_product_attention(
 ## Multi-Head Attention
 
 <figure style="text-align: center;">
-  <img src="/assets/images/multi-head-attention-diagram.png" alt="Multi-Head Attention Diagram" style="max-width: 100%; height: auto; margin: auto;">
-  <figcaption>Multi-head attention. Detail from the architecture diagram above, <a href="https://arxiv.org/abs/2009.06732">image credit</a>: Tay et al., "Efficient Transformers: A Survey"</figcaption>
+  <img src="/assets/images/multi-head-attention.svg" alt="Multi-head attention. Keys, values and queries are each projected by a separate linear layer, the projections feed h parallel scaled dot-product attention heads, and the heads' outputs are concatenated and projected once more. Dashed lines magnify one of those heads into the scaled dot-product attention detail on the left." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>Multi-head attention, the middle panel of the diagram above, with the scaled dot-product attention of a single head magnified on the left. Each of the <em>h</em> heads gets its own projections of the queries, keys, and values; their outputs are concatenated and passed through one more linear layer.</figcaption>
 </figure>
 
 Scaled dot-product attention gives us a powerful primitive: given a query, we compute a weighted average over a set of values based on their relevance. However, a single attention operation forces the model to express all relationships in one shared representation space. In practice, different types of relationships—such as syntactic structure, semantic similarity, or positional alignment—can interfere with one another when compressed into a single set of attention weights. Multi-head attention addresses this limitation by running several attention operations in parallel, each with its own learned projections of queries, keys, and values.

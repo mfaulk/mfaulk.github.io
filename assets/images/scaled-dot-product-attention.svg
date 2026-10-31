@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-111.0 -236.0 222.0 262.0" width="222.0" height="262.0" font-family="system-ui, -apple-system, Segoe UI, Helvetica, sans-serif" role="img" aria-label="Scaled dot-product attention. Queries and keys enter a matrix multiply, whose result is scaled by one over the square root of the key dimension, passed through a softmax, and then multiplied by the values. The values bypass the softmax and enter only the second matrix multiply.">
+<title>Scaled dot-product attention</title>
+<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#55606b"/></marker></defs>
+<text x="-52.0" y="0.0" text-anchor="middle" font-size="14" fill="#1F5CA8" font-weight="600">Q</text>
+<text x="-8.0" y="0.0" text-anchor="middle" font-size="14" fill="#B4531A" font-weight="600">K</text>
+<text x="52.0" y="0.0" text-anchor="middle" font-size="14" fill="#2F7A4F" font-weight="600">V</text>
+<rect x="-82.0" y="-52.0" width="104.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="-30.0" y="-32.0" text-anchor="middle" font-size="14" fill="#1a2a3a">MatMul</text>
+<line x1="-52.0" y1="-16.0" x2="-52.0" y2="-22.0" stroke="#1F5CA8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="-8.0" y1="-16.0" x2="-8.0" y2="-22.0" stroke="#B4531A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-82.0" y="-100.0" width="104.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="-30.0" y="-80.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Scale</text>
+<line x1="-30.0" y1="-52.0" x2="-30.0" y2="-70.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-82.0" y="-148.0" width="104.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="-30.0" y="-128.0" text-anchor="middle" font-size="14" fill="#1a2a3a">Softmax</text>
+<line x1="-30.0" y1="-100.0" x2="-30.0" y2="-118.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-74.0" y="-196.0" width="148.0" height="30.0" rx="6" fill="#EFF1F3" stroke="#55606b" stroke-width="1.5"/>
+<text x="0.0" y="-176.0" text-anchor="middle" font-size="14" fill="#1a2a3a">MatMul</text>
+<line x1="-30.0" y1="-148.0" x2="-30.0" y2="-166.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="52.0" y1="-16.0" x2="52.0" y2="-166.0" stroke="#2F7A4F" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="0.0" y1="-196.0" x2="0.0" y2="-220.0" stroke="#55606b" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="-95.0" y="-210.0" width="190.0" height="220.0" rx="12" fill="none" stroke="#55606b" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.5"/>
+</svg>
