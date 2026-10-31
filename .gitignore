@@ -10,3 +10,7 @@ vendor/
 
 # Experiment outputs (adapter weights)
 out/
+
+# Python bytecode
+__pycache__/
+*.pyc
