@@ -646,6 +646,11 @@ Compare batch normalization, which standardizes each feature across the examples
 
 Where to put the normalization is a separate choice: before each sublayer, or after the residual addition. We come back to it after the encoder block below.
 
+<figure style="text-align: center;">
+  <img src="/assets/images/pre-norm-vs-post-norm.svg" alt="Two encoder blocks side by side. In the post-norm block on the left, each sublayer's output is added back to the residual path and the sum is then passed through a LayerNorm, so the path is interrupted by a normalization between every pair of sublayers. In the pre-norm block on the right, the LayerNorm moves onto the branch ahead of each sublayer and the residual path runs unbroken from the block's input to its output, with a single LayerNorm after the whole stack. Dropout is applied to each sublayer's output before the addition in both arrangements, never to the residual path itself." style="max-width: 100%; height: auto; margin: auto;">
+  <figcaption>The same block drawn both ways. Both contain two sublayers, two additions, and two normalizations — only the placement differs. On the left, the paper's arrangement, every normalization sits <em>on</em> the heavy residual path, so a signal travelling from the bottom of a deep stack to the top is rescaled at each one. On the right, the normalizations move onto the branch and the residual path runs from input to output untouched, which is the "exact identity path" the pre-norm argument rests on; it is also why a pre-norm stack needs one final normalization of its own, drawn dashed. Dropout applies to each sublayer's output before the addition, and never to the residual path.</figcaption>
+</figure>
+
 ### Dropout
 
 Dropout zeroes each element of a tensor independently with probability $p$ during training, and scales the survivors by $1/(1-p)$ so that the expected value is unchanged. At evaluation time it is the identity. The transformer applies it in three places, all of which appear in the code in this post:
