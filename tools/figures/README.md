@@ -14,6 +14,8 @@ script writes exactly one figure, and is named after the file it produces.
 | `multi-head-attention.py` | `multi-head-attention.svg` | Transformers — multi-head attention |
 | `transformer-architecture.py` | `transformer-architecture.svg` | Transformers — opening diagram |
 | `encoder-decoder-architectures.py` | `encoder-decoder-architectures.svg` | Transformers — encoder-decoder vs decoder-only vs encoder-only |
+| `positional-encoding.py` | `positional-encoding.svg` | Transformers — positional embeddings |
+| `pre-norm-vs-post-norm.py` | `pre-norm-vs-post-norm.svg` | Transformers — layer normalization |
 
 `_panels.py` is the exception to one-script-one-figure: it generates nothing by
 itself. The last four figures draw the same blocks at different zoom levels, so
